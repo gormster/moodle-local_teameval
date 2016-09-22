@@ -1,0 +1,44 @@
+<div class="local-teameval-questionnaire">
+{{#deadline}}
+<div class="deadline">{{#str}} deadline, local_teameval {{/str}}: <time>{{deadline}}</time></div>
+{{/deadline}}
+{{#noncompletion}}
+<div class="noncompletion-advice">
+{{#str}} incompletesummary, local_teameval, { "n" : {{n}}, "penalty": {{penalty}} }{{/str}}
+</div>
+{{/noncompletion}}
+<ol id="local-teameval-questions">
+{{#questions}}
+    <li class="local-teameval-question" id="teameval-{{type}}-question-{{questionid}}-{{uniqid}}">
+        <div class="question-container">
+            {{{content}}}
+        </div>
+    </li>
+{{/questions}}
+</ol>
+{{#locked}}
+<div class="locked">
+<div class="reason">{{#str}} questionnairelocked, local_teameval, {{lockedreason}} {{/str}}</div>
+<div class="hint">{{{lockedhint}}}</div>
+</div>
+{{/locked}}
+{{{templateio}}}
+</div>
+{{#js}}{{#_notset}}<script>{{/_notset}}
+
+require(['jquery', 'local_teameval/submitquestion'], function($, SubmitQuestion) {
+
+    {{#questions}}
+        var el = $('#teameval-{{type}}-question-{{questionid}}-{{uniqid}}');
+        el.data('questionid', {{questionid}});
+        el.data('questiontype', '{{type}}');
+        el.data('submissioncontext', {{{submissioncontext}}});
+        {{#editingcontext}}el.data('editingcontext', {{{editingcontext}}}){{/editingcontext}};
+    {{/questions}}
+
+    {{#submission}}
+    SubmitQuestion.initialise({{cmid}});
+    {{/submission}}
+
+});
+{{/js}}

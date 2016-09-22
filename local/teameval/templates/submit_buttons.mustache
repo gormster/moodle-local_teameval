@@ -1,0 +1,10 @@
+<div class="local-teameval-submit-buttons">
+<div class="results incomplete"></div>
+<span class="results saved">{{#str}}saved, local_teameval{{/str}}</span>
+<button type="button" class="submit">{{#str}}submit, core{{/str}}</button> <button type="button" class="reset">{{#str}}reset, core{{/str}}</button>
+</div>
+{{#js}}{{#notset}}<script>{{/notset}}
+require(['jquery'], function($) {
+    $('.local-teameval-submit-buttons .results.saved').hide();
+});
+{{/js}}

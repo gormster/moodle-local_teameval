@@ -1,0 +1,28 @@
+<h2 class="local-teameval-container-heading">{{#str}} pluginname, local_teameval {{/str}}</h2>
+<div class="local-teameval-containerbox">
+    <div class="local-teameval-turn-on">
+        <button type="button" class="btn btn-primary" id="local-teameval-turn-on-{{uniqid}}">{{#str}} turnonteameval, local_teameval {{/str}}</button>
+    </div>
+</div>
+{{#js}}
+require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
+    
+    $('#local-teameval-turn-on-{{uniqid}}').click(function() {
+        var promises = Ajax.call([{
+            methodname: "local_teameval_turn_on",
+            args: {
+                cmid: {{cmid}}
+            }
+        }]);
+
+        $(this).prop('disabled', true).text("{{#str}} enablingteameval, local_teameval {{/str}}");
+
+        promises[0].done(function() {
+            window.location.reload(true);
+        });
+
+        promises[0].fail(Notification.exception);
+    });
+
+});
+{{/js}}

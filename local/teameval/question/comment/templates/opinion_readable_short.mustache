@@ -1,0 +1,10 @@
+{{!
+
+    @template teamevalquestion_comment/opinion_readable_short
+
+}}
+
+<div id="teamevalquestion-comment-{{uniqid}}" class="teamevalquestion-comment-container">
+{{#comment}}<div class="teamevalquestion-comment-full-comment">{{comment}}</div>{{/comment}}
+{{short}}{{#comment}} <a class="teamevalquestion-comment-show-comment">{{#pix}} i/info, core, Show full comment {{/pix}}</a>{{/comment}}
+</div>

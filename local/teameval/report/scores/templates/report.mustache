@@ -1,0 +1,28 @@
+<div class="teamevalreport-scores-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Group</th>
+                <th>Completion</th>
+                <th>Score</th>
+                <th>Intermediate Grade</th>
+                <th>Non-completion Penalty</th>
+                <th>Final Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#scores}}
+            <tr>
+                <th scope="row">{{{userpic}}} {{fullname}}</th>
+                <td>{{group}}</td>
+                <td>{{completion}}</td>
+                <td>{{score}}</td>
+                <td>{{intermediategrade}}</td>
+                <td>{{noncompletionpenalty}}</td>
+                <td>{{finalgrade}}</td>
+            </tr>
+            {{/scores}}
+        </tbody>
+    </table>
+</div>

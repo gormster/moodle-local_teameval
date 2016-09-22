@@ -1,0 +1,181 @@
+{{!
+    @template: local_teameval/release
+
+    Example context (JSON): {
+        "all" : false,
+        "groups" : [
+            {
+                "released": true,
+                "id": 1,
+                "grade": 60,
+                "name": "Group A",
+                "users": [
+                    {
+                        "id": 1,
+                        "fullname": "Alice User",
+                        "userpic": "",
+                        "score": 0.87,
+                        "noncompletionpenalty": 0,
+                        "grade": 56.1,
+                        "released": false
+                    },
+                    {
+                        "id": 2,
+                        "fullname": "Bob User",
+                        "userpic": "",
+                        "score": 0.96,
+                        "noncompletionpenalty": 0,
+                        "grade": 58.8,
+                        "released": false
+                    },
+                    {
+                        "id": 3,
+                        "fullname": "Carol User",
+                        "userpic": "",
+                        "score": 1.17,
+                        "noncompletionpenalty": 0,
+                        "grade": 65.1,
+                        "released": false
+                    }
+                ]
+            }
+        ]
+    }
+}}
+<div class="local-teameval-release-container" id="local-teameval-release-{{uniqid}}">
+    <div class="release-all">{{#str}}releaseallmarks, local_teameval{{/str}}
+        <div class="local-teameval-switch{{#all}} checked{{/all}}" data-level="0" data-target="0" id="switch-all-{{uniqid}}">
+        </div>
+    </div>
+    <div class="groups">
+        {{#groups}}
+        <div class="group">
+            <header>
+                <h3>{{name}}</h3>
+                <div class="group-grade">{{#grade}}Group grade: {{grade}}{{/grade}}{{^grade}}Not yet graded{{/grade}}</div>
+                <div class="group-release-switch">Release marks for group 
+                    <div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="1" data-target="{{gid}}" data-override="switch-all-{{uniqid}}" id="switch-group-{{gid}}-{{uniqid}}"></div>
+                </div>
+            </header>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:60%">{{#str}}name, core{{/str}}</th>
+                        <th style="width:10%">{{#str}}score, local_teameval{{/str}}</th>
+                        <th style="width:10%">{{#str}}noncompletionpenalty, local_teameval{{/str}}</th>
+                        <th style="width:10%">{{#str}}grade, core{{/str}}</th>
+                        <th style="width:10%">{{#str}}releasemarks, local_teameval{{/str}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#users}}
+                    <tr>
+                        <td>{{{userpic}}} {{name}}</td>
+                        <td>{{score}}</td>
+                        <td>{{noncompletionpenalty}}%</td>
+                        <td>{{grade}}</td>
+                        <td><div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="2" data-target="{{id}}" data-override="switch-group-{{gid}}-{{uniqid}}" id="switch-user-{{id}}-{{uniqid}}"></div></td>
+                    </tr>
+                    {{/users}}
+                </tbody>
+            </table>
+        </div>
+        {{/groups}}
+    </div>
+    <button type="button" class="save">
+    {{#str}} savechanges, moodle {{/str}}
+    </button>
+    <div class="saved">
+    {{#str}} saved, local_teameval {{/str}}
+    </div>
+</div>
+{{#js}}
+
+{{! this exists purely to trigger syntax highlighting in sublime }}
+{{#_notset}}<script>{{/_notset}}
+require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], function($, Switch, Ajax, Notification) {
+
+    $('.local-teameval-release-container .saved').hide();
+
+    $('#local-teameval-release-{{uniqid}}').parent().on('viewWillAppear', function() {
+
+        var promises = Ajax.call([{
+            methodname: 'local_teameval_get_release',
+            args: {
+                cmid: {{cmid}}
+            }
+        }]);
+
+        promises[0].done(function(data) {
+
+            //todo: uncheck all switches that are enabled but not in this result set
+
+            $('.local-teameval-release-container .local-teameval-switch.checked').each( function() {
+                $(this).trigger('setState', [null, 'auto']);
+            })
+
+            for (var i = data.length - 1; i >= 0; i--) {
+                var release = data[i];
+
+                switch(parseInt(release.level)) {
+                    case 0:
+                        $('#switch-all-{{uniqid}}').trigger('setState', ['checked', 'auto']);
+                        break;
+                    case 1:
+                        $('#switch-group-'+release.target+'-{{uniqid}}').trigger('setState', ['checked', 'auto']);
+                        break;
+                    case 2:
+                        $('#switch-user-'+release.target+'-{{uniqid}}').trigger('setState', ['checked', 'auto']);
+                        break;
+                }
+            }
+
+        });
+
+        promises[0].fail(Notification.exception);
+
+    });
+
+    var changedValues = {};
+
+    $('.local-teameval-release-container .local-teameval-switch').each( function() {
+        Switch.init($(this));
+
+        $(this).on('changed', function() {
+
+            var sw = $(this);
+            // sw.trigger('showLoading');
+
+            var release = $(this).hasClass('checked');
+            var level = $(this).data('level');
+            var target = $(this).data('target');
+
+            changedValues[level+':'+target] = {level: level, target: target, release: release};
+
+        });
+    });
+
+    $('.local-teameval-release-container button.save' ).click(function() {
+
+        var vals = $.map(changedValues, function(v) { return  v });
+
+        console.log(vals);
+
+        var promises = Ajax.call([{
+            methodname: 'local_teameval_release',
+            args: {
+                cmid: {{cmid}},
+                release: vals
+            }
+        }]);
+
+        promises[0].done(function() {
+            $('.local-teameval-release-container .saved').show(300).delay(3000).hide(300);
+        });
+
+        promises[0].fail(Notification.exception);
+    });
+
+});
+
+{{/js}}

@@ -1,0 +1,196 @@
+.teamevalquestion-likert-question-submission h3 {
+    font-size: 1.5em;
+    margin:0;
+}
+
+.teamevalquestion-likert-question-submission .responses {
+    width: 100%;
+    border: 1px solid #CCC;
+    margin-top: 5px;
+}
+
+.teamevalquestion-likert-question-submission .responses th, 
+.teamevalquestion-likert-question-submission .responses td {
+    text-align: center;
+    padding: 5px;
+}
+
+.teamevalquestion-likert-question-submission .responses th {
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    height: 2em;
+}
+
+.teamevalquestion-likert-question-submission .responses td {
+    border-left: 1px solid #ccc;
+}
+
+.teamevalquestion-likert-question-submission .responses.waterfall.self tr:first-child th,
+.teamevalquestion-likert-question-submission .responses.waterfall.self tr:first-child td.remaining {
+    background-color: rgba(120,230,170,0.2);
+}
+
+.teamevalquestion-likert-question-submission .responses.waterfall.self thead td:first-child {
+    background-color: rgba(120,230,170,0.2);
+}
+
+.teamevalquestion-likert-question-submission .responses.waterfall thead td.remaining {
+    border-bottom: 1px solid #ccc;
+    border-left: none;
+}
+
+.teamevalquestion-likert-question-submission .responses.waterfall th {
+    text-align:left;
+}
+
+.teamevalquestion-likert-question-submission .responses.waterfall td.criteria.meaning {
+    text-align: left;
+}
+
+/* don't border the criteria box */
+.teamevalquestion-likert-question-submission .responses thead tr:nth-last-child(2) th, 
+.teamevalquestion-likert-question-submission .responses thead tr:nth-last-child(2) td.remaining {
+    border-bottom: none;
+}
+
+.teamevalquestion-likert-question-submission .responses thead tr:last-child td:nth-last-child(3) {
+    border-right: none;
+}
+
+/* alternate colors for marked users */
+
+.teamevalquestion-likert-question-submission .responses.waterfall thead tr:nth-child(odd) td.remaining,
+.teamevalquestion-likert-question-submission .responses.waterfall thead tr:nth-child(odd):not(:first-child) th:not(.criteria) {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.teamevalquestion-likert-question-submission .responses.waterfall thead tr:nth-child(even) td.remaining {
+    background: none;
+}
+
+.teamevalquestion-likert-question-submission .responses td:nth-child(odd) {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.teamevalquestion-likert-question-submission .responses.grid th:nth-child(odd) {
+    background-color: rgba(0,0,0,0.05);	
+}
+
+.teamevalquestion-likert-question-submission .responses th.criteria {
+    border: 1px solid #99b;
+    background-color: rgba(196, 196, 221, 1.0);
+}
+
+.teamevalquestion-likert-question-submission .responses th.criteria.value {
+    border-right:none;
+}
+
+.teamevalquestion-likert-question-submission .responses th.criteria.meaning {
+    border-left:none;
+}
+
+.teamevalquestion-likert-question-submission .responses td.criteria.value {
+    background-color: rgba(221, 221, 238, 1.0);
+    border-left:1px solid #99b;
+    border-right:none;
+    font-weight: bold;
+    font-size: 110%;
+    width: 2.5em;
+    padding: 0;
+}
+
+.teamevalquestion-likert-question-submission .responses td.criteria.meaning {
+    background-color: rgba(221, 221, 238, 1.0);
+    border-right:1px solid #99b;
+    border-left: none;
+    width: auto;
+}
+
+
+.teamevalquestion-likert-question-submission .responses tr:last-child td.criteria {
+    border-bottom:1px solid  #99b;	
+}
+
+/* color odd rows */
+
+.teamevalquestion-likert-question-submission .responses tbody tr:nth-child(odd) td:nth-child(odd) {
+    background-color:rgba(0,0,0,0.0975);
+}
+
+.teamevalquestion-likert-question-submission .responses tbody tr:nth-child(odd) td:nth-child(even) {
+    background-color:rgba(0,0,0,0.05);	
+}
+
+.teamevalquestion-likert-question-submission .responses tbody tr:nth-child(odd) td.criteria {
+    background-color: rgba(212, 212, 230, 1.0);
+}
+
+.teamevalquestion-likert-question-submission .responses.self tbody tr:nth-child(odd) td:first-child {
+    background-color: rgba(90,172,127,0.2);
+}
+
+.teamevalquestion-likert-question-submission .responses.self tbody tr:nth-child(even) td:first-child {
+    background-color: rgba(120,230,170,0.2);
+}
+
+
+.teamevalquestion-likert-question-submission .responses.waterfall tbody td {
+    width: 2em;
+}
+
+.teamevalquestion-likert-question-submission .responses.waterfall tbody tr {
+    height: 3em;
+}
+
+.teamevalquestion-likert-question-submission .responses thead td {
+    border-right: 1px solid #ccc;
+}
+
+.teamevalquestion-likert-question-submission .responses thead td.first {
+    border-right: none;
+}
+
+.teamevalquestion-likert-question-submission .responses.grid tbody th {
+    white-space: nowrap;
+}
+
+.teamevalquestion-likert-question-submission .responses td input {
+    margin:0;
+}
+
+.teamevalquestion-likert-question-submission .responses.grid.self tbody tr:first-child {
+    background-color: rgba(120,230,170,0.2);
+}
+
+.teamevalquestion-likert-question-submission .responses.grid thead th {
+    border-left: 1px solid #ccc;
+}
+
+.teamevalquestion-likert-question-submission .incomplete-indicator {
+    color: #A00;
+    font-weight: bold;
+    padding: 0.5em;
+    display: none;
+}
+
+.incomplete .teamevalquestion-likert-question-submission .incomplete-indicator {
+    display: block;
+}
+
+.teamevalquestion-likert-opinion-readable {
+    text-align: right;
+}
+
+
+
+@media screen and (max-width: 768px) {
+
+    .teamevalquestion-likert-question-submission .responses.waterfall tbody td {
+        width: 1em;
+    }
+
+    .teamevalquestion-likert-question-submission .responses.waterfall tbody tr {
+        height: 2em;
+    }
+
+}

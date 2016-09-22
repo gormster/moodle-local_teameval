@@ -1,0 +1,70 @@
+{{#locked}}
+<div class="local-teameval-template-io" id="local-teameval-template-io-{{uniqid}}">
+<button type="button" class="btn template-download">{{#str}} downloadtemplate, local_teameval {{/str}}</button>
+</div>
+{{/locked}}
+{{^locked}}
+<div id="local-teameval-add-question-{{uniqid}}" class="local-teameval-add-question mdl-right">
+<a href="javascript:void(0);">{{#str}} addquestion, local_teameval {{/str}}</a>
+</div>
+<div class="local-teameval-template-toolbox collapsible{{#showtoolbox}} expanded{{/showtoolbox}}{{^showtoolbox}} collapsed{{/showtoolbox}}">
+<h4 class="collapsible-heading">{{#str}} templatesheading, local_teameval {{/str}}</h4>
+<div id="local-teameval-template-search-{{uniqid}}" class="local-teameval-template-search ui-front collapsing">
+<label>{{#str}} addquestionsfrom, local_teameval {{/str}}<input type="text" id="template-search-{{uniqid}}" /></label>
+<div class="template-add-preview"></div>
+<button type="btn btn-default">{{#str}} add {{/str}}</button>
+</div>
+<div class="local-teameval-template-io collapsing" id="local-teameval-template-io-{{uniqid}}">
+<button type="button" class="btn template-download">{{#str}} downloadtemplate, local_teameval {{/str}}</button>
+<button type="button" class="btn template-upload">{{#str}} uploadtemplate, local_teameval {{/str}}</button>
+</div>
+</div>
+{{/locked}}
+{{#js}}{{#_notset}}<script>{{/_notset}}
+require(['jquery', 'local_teameval/addquestion', 'local_teameval/collapsible', 'core/str'], function($, AddQuestion, Collapsible, Strings) {
+
+    AddQuestion.initialise({
+        addButton: $('#local-teameval-add-question-{{uniqid}}'),
+        templateSearch: $('#local-teameval-template-search-{{uniqid}}'),
+        templateIO: $('#local-teameval-template-io-{{uniqid}}'),
+        id: {{teamevalid}},
+        self: {{self}},
+        locked: {{locked}},
+        download: "{{download}}",
+        {{#filepickerid}}filepickerid: "{{filepickerid}}",
+        filepickeritemid: {{filepickeritemid}},{{/filepickerid}}
+        subplugins: {{{subplugins}}},
+        autocompleteRenderFunction: function( ul, item ) {
+            var rslt = $( "<li class='local-teameval-template-search-result' />" );
+            var promise = Strings.get_strings([
+                {key: 'fromtemplate', component: 'local_teameval', param: item.from},
+                {key: 'matchingtags', component: 'local_teameval', param: item.tags.join(', ')}
+                ]);
+
+            promise.done(function(s) {
+                rslt.append( "<a class='title'>" + item.title + "</a><br>"+
+                "<span class='subtitle'>" + s[0] + " • " + s[1] + "</span>" )
+                .appendTo( ul );
+            });
+            
+            return rslt;
+        },
+        templatePreviewFunction: function( item ) {
+            if (item) {
+                var promise = Strings.get_string('templatepreview', 'local_teameval', {'from': item.title, 'numqs': item.numqs});
+                promise.done(function(s) {
+                    $('#local-teameval-template-search-{{uniqid}} .template-add-preview').html(s);
+                });
+            } else {
+                $('#local-teameval-template-search-{{uniqid}} .template-add-preview').empty();
+            }
+        }
+    });
+
+    Collapsible.init({
+        'selector': '.local-teameval-template-toolbox',
+        'target': '.collapsible-heading'
+    });
+
+});
+{{/js}}

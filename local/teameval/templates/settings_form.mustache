@@ -1,0 +1,37 @@
+<h2 class="local-teameval-settings">Settings</h2>
+<form class="form-horizontal">
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox inline">
+                <input id="local-teameval-settings-enabled" type="checkbox" {{#enabled}} checked="checked" {{/enabled}} />
+                Enabled
+            </label>
+            <label class="checkbox inline">
+                <input id="local-teameval-settings-selfassessment" type="checkbox" {{#selfassessment}} checked="checked" {{/selfassessment}} />
+                Self-assessment
+            </label>
+            <label class="checkbox inline">
+                <input id="local-teameval-settings-public" type="checkbox" {{#public}} checked="checked" {{/public}} />
+                Public</label>
+            </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="local-teameval-settings-fraction">Fraction</label>
+        <div class="controls">
+            <input id="local-teameval-settings-fraction" type="number" value="{{fraction}}" min="0.00" max="1.00" step="0.01"/>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="local-teameval-settings-noncompletionpenalty">Non-Completion Penalty</label>
+        <div class="controls">
+            <input id="local-teameval-settings-noncompletionpenalty" type="number" value="{{noncompletionpenalty}}" min="0" max="1" step="0.01" />
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <button type="button" id="local-teameval-settings-save-button">Save</button>
+            <button type="button" id="local-teameval-settings-cancel-button">Cancel</button>
+        </div>
+    </div>
+</form>
+                

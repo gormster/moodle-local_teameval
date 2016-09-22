@@ -1,0 +1,109 @@
+{{!
+    @template teamevalreport_responses/report
+
+    Starting point for an awesome template.
+
+    Example context: {
+        "questions" : [
+            {
+                "title" : "Question 1",
+                "groups" : [
+                    {
+                        "marked": [
+                            "Alice",
+                            "Bob",
+                            "Carol"
+                        ],
+                        "marks": [
+                            {
+                                "marker" : "Alice",
+                                "scores" : [3, 2, 1]
+                            },
+                            {
+                                "marker" : "Bob",
+                                "scores" : [1, 3, 2]
+                            },
+                            {
+                                "marker" : "Carol",
+                                "scores" : [1, 2, 3]
+                            },
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+
+}}
+<div class="teamevalreport-responses-container">
+{{#questions}}
+<h2>{{title}}</h2>
+{{#groups}}
+<table>
+    <thead>
+        <tr>
+            <td colspan="2"></td>
+            <th colspan="{{markedcount}}" class="markees-title">Marks given to</th>
+        </tr>
+        <tr>
+        <td></td>
+        <th class="group-name">{{name}}</th>
+        {{#marked}}
+            <th>{{fullname}}</th>
+        {{/marked}}
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th rowspan="{{markscount}}" class="markers-title">
+                <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 100 100">
+                <text x="0" y="0" 
+                    font-size="50"
+                    transform="rotate(-90) translate(-50 66)"
+                    text-anchor="middle">
+                Marker
+              </text>
+              </svg>
+            </th>
+        </tr>
+        {{#marks}}
+        <tr>
+            <th scope="row">{{marker}}</th>
+            {{#scores}}
+            <td {{#data}} class="needs-render" data-template="{{template}}" data-context="{{data}}"{{/data}}>{{{prerendered}}}</td>
+            {{/scores}}
+        </tr>
+        {{/marks}}
+    </tbody>
+</table>
+{{/groups}}
+{{/questions}}
+<button type="button" id="teamevalreport-responses-download-{{uniqid}}">{{#str}} download, teamevalreport_responses {{/str}}</button>
+</div>
+{{#js}}{{#_notset}}<script>{{/_notset}}
+
+var initCalls = {
+    {{#amdmodules}}'{{{module}}}': [ {{#calls}}'{{.}}',{{/calls}} ] {{/amdmodules}}
+};
+
+var modules = Object.keys(initCalls);
+var requirements = ['jquery', 'core/templates'].concat(modules);
+
+require(requirements, function($, Templates) {
+
+    var resolvedModules = Array.prototype.slice.call(arguments);
+
+    $.each(initCalls, function(module, calls) {
+        var m = resolvedModules[requirements.indexOf(module)];
+        for (var i = 0; i < calls.length; i++) {
+            var c = calls[i];
+            m[c]();
+        }
+    });
+
+    $('#teamevalreport-responses-download-{{uniqid}}').click(function() {
+        window.location.href = "{{{downloadlink}}}";
+    });
+
+});
+{{/js}}

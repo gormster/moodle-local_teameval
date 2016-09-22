@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/searchable/db" VERSION="20160526" COMMENT="XMLDB file for Moodle local/searchable"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="searchable_tags" COMMENT="Tags that can be searched">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="tag" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="uq_tag" TYPE="unique" FIELDS="tag"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="searchable_objects" COMMENT="The actual search entries">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="objecttype" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Object types are your main filter for searchable objects. You can search"/>
+        <FIELD NAME="objectid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false" COMMENT="The identifier of the object that will be returned by search results"/>
+        <FIELD NAME="tagid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false" COMMENT="The tag that is associated with this object"/>
+        <FIELD NAME="weight" TYPE="number" LENGTH="10" NOTNULL="true" SEQUENCE="false" DECIMALS="0" COMMENT="The weight with which this object associates with this tag"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="tagid" TYPE="foreign" FIELDS="tagid" REFTABLE="searchable_tags" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_object" UNIQUE="false" FIELDS="objecttype, objectid"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

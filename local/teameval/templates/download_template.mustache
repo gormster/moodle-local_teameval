@@ -1,0 +1,10 @@
+<div class="local-teameval-template-io" id="local-teameval-template-io-{{uniqid}}">
+<button class="btn" type="button" class="template-download">{{#str}} downloadtemplate, local_teameval {{/str}}</button>
+</div>
+{{#js}}
+require(['jquery'], function($) {
+    $('#local-teameval-template-io-{{uniqid}} .template-download').click(function() {
+        window.location.href = "{{download}}";
+    });
+});
+{{/js}}

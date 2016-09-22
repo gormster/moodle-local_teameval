@@ -1,0 +1,40 @@
+<div class="local-teameval-settings-button">Settings</div>
+<div class="local-teameval-settings-container">
+<h2 class="local-teameval-settings">{{#str}}settings, local_teameval{{/str}}</h2>
+{{{form}}}
+</div>
+{{#js}}
+{{#_notset}}<script>{{/_notset}}
+
+require(['jquery', 'local_teameval/ajaxforms'], function($, ajaxforms) {
+    var container = $('.local-teameval-settings-container');
+    container.css('display','block');
+    container.hide();
+
+    var settingsButton = $('.local-teameval-settings-button');
+    settingsButton.click(function() {
+        container.toggle();
+    });
+    
+    var form = container.find('form');
+    ajaxforms.ajaxify(form, function (promise) {
+        var saveButton = container.find('input[type=submit]');
+        saveButton.prop('disabled',true);
+        saveButton.html('Saving...');
+
+        promise.done(function(data) {
+            container.hide();
+            saveButton.html("Save");
+            saveButton.prop('disabled',false);
+
+            var releaseTab = $(".local-teameval-containerbox nav.tabs .tab.release").hide()
+            if ($(".local-teameval-settings-container form #id_autorelease").prop('checked')) {
+                releaseTab.hide()
+            } else {
+                releaseTab.show()
+            }
+
+        }.bind(this));
+    });
+});
+{{/js}}

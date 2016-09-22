@@ -1,0 +1,194 @@
+{{! @template teamevalreport_feedback/report
+
+Report for getting all questions with feedback and approving release / rescinding comments.
+
+Example context (json): {
+    "groups" : [
+        {
+            "name": "Example Group",
+            "groupid": 1,
+            "markers": [
+                {
+                    "fullname": "Example User 1",
+                    "userid": 1,
+                    "questions": [
+                        {
+                            "title": "Example Question 1",
+                            "questionid": 1,
+                            "feedbacks": [
+                                {
+                                    "name": "Themselves",
+                                    "markedid": 1,
+                                    "feedback": "This guy is great",
+                                    "odd": true
+                                },
+                                {
+                                    "name": "Example User 2",
+                                    "markedid": 2,
+                                    "feedback": "This guy is alright"
+                                },
+                                {
+                                    "name": "Example User 3",
+                                    "markedid": 3,
+                                    "feedback": "This guy is awful",
+                                    "odd": true
+                                },
+                                {
+                                    "name": "Example User 4",
+                                    "markedid": 4,
+                                    "feedback": "Da Best"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "Example Question 2",
+                            "questionid": 2,
+                            "feedbacks": [
+                                {
+                                    "name": "Themselves",
+                                    "markedid": 1,
+                                    "feedback": "This guy is the best",
+                                    "odd": true
+                                },
+                                {
+                                    "name": "Example User 2",
+                                    "markedid": 2,
+                                    "feedback": "This guy is pretty decent"
+                                },
+                                {
+                                    "name": "Example User 3",
+                                    "markedid": 3,
+                                    "feedback": "Don't know how he dressed himself",
+                                    "odd": true
+                                },
+                                {
+                                    "name": "Example User 4",
+                                    "markedid": 4,
+                                    "feedback": "Da Realest"
+                                }
+                            ]
+                        }
+                    ]
+                }	
+            ]
+        }
+    ]
+} 
+
+}}
+
+<div class="teamevalreport-feedback–container">
+{{#groups}}
+<h2>
+    {{name}}
+    <div class="rejectrelease">
+    {{{rejectrelease}}}
+    <div class="local-teameval-switch tristate" id="release-group-{{groupid}}-{{uniqid}}"></div>
+    </div>
+</h2>
+{{#markers}}
+<table>
+    <thead>
+        <tr class="marker-name">
+            <th colspan="2">
+                <div class="feedback-from">Feedback from</div>
+                {{{userpic}}} {{fullname}}
+            </th>
+            <td>
+                <div class="local-teameval-switch tristate" id="release-user-{{userid}}-{{uniqid}}" data-override="release-group-{{groupid}}-{{uniqid}}"></div>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {{#questions}}
+            <tr>
+                <th colspan="3" class="question-title">{{title}}
+                <div class="local-teameval-switch tristate right" id="release-user-{{userid}}-question-{{questionid}}-{{uniqid}}" data-override="release-user-{{userid}}-{{uniqid}}"></div>
+                </th>
+            </tr>
+            {{#feedbacks}}
+            <tr{{#odd}} class="odd"{{/odd}}>
+                <th scope="row" class="marked-name"><span class="feedback-about">about</span> {{{userpic}}} {{name}}</th>
+                <td class="feedback">{{{feedback}}}</td>
+                <td class="switch"><div class="local-teameval-switch tristate" data-override="release-user-{{userid}}-question-{{questionid}}-{{uniqid}}" data-identifier="{{questionid}}-{{userid}}-{{markedid}}" {{#state}}data-state="{{state}}"{{/state}}></div></td>
+            </tr>
+            {{/feedbacks}}
+        {{/questions}}
+    </tbody>
+</table>
+{{/markers}}
+{{/groups}}
+
+<button type="button" id="save-button-{{uniqid}}">Save</button>
+<div class="saved" id="progress-indicator-{{uniqid}}">
+{{#pix}} i/loading_small, core, {{#str}} saving, local_teameval {{/str}}{{/pix}} {{#str}} saving, local_teameval {{/str}}
+</div>
+<div class="saved" id="saved-{{uniqid}}">
+{{#str}} saved, local_teameval {{/str}}
+</div>
+
+</div>
+
+{{#js}}{{#_notset}}<script>{{/_notset}}
+require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], function($, Switch, Ajax, Notification) {
+
+    var updatedStates = {};
+
+    $('.teamevalreport-feedback–container .saved').hide();
+
+    $('.teamevalreport-feedback–container .local-teameval-switch').each(function() {
+        Switch.init(this);
+
+        $(this).on('changed', function(evt) {
+
+            var sw = $(this);
+            var state = sw.data('state');
+            var newState = {checked: 1, rejected: -1}[state] || 0;
+
+            var identifier = sw.data('identifier');
+
+            if (identifier) {
+                updatedStates[identifier] = newState;
+            }
+
+        });
+    });
+
+    Switch.resolveStates();
+
+    $('#save-button-{{uniqid}}').click(function(evt) {
+
+        var c = {};
+
+        c['cmid'] = {{cmid}};
+        c['states'] = [];
+        
+        $.each(updatedStates, function(k,v) {
+            var matches = k.match(/(\d+)-(\d+)-(\d+)/);
+            var state = {
+                questionid: matches[1],
+                markerid: matches[2],
+                targetid: matches[3],
+                state: v
+            }
+            c['states'].push(state);
+
+        });
+
+        var promises = Ajax.call([{
+                methodname: 'teamevalreport_feedback_update_states',
+                args: c
+            }]);
+
+        $('#progress-indicator-{{uniqid}}').show(300);
+
+        promises[0].done(function() {
+            $('#progress-indicator-{{uniqid}}').hide(300);
+            $('#saved-{{uniqid}}').show(300).delay(3000).hide(300);
+        })
+
+        promises[0].fail(Notification.exception);
+
+    });
+});
+{{/js}}

@@ -1,0 +1,53 @@
+<h2 class="local-teameval-container-heading" name="team_evaluation">Team Evaluation</h2>
+<div class="local-teameval-containerbox">
+{{{settings}}}
+<nav class="tabs">
+<ul>
+{{#questionnaire}}
+    <li class="tab" data-tab-content-id="questionnaire-{{uniqid}}"><a href="#">{{#str}}questionnaire, local_teameval{{/str}}</a></li>
+{{/questionnaire}}
+{{#results}}
+    <li class="tab" data-tab-content-id="results-{{uniqid}}"><a href="#">{{#str}}results, local_teameval{{/str}}</a></li>
+{{/results}}
+{{#release}}
+    <li class="tab release" data-tab-content-id="release-{{uniqid}}"><a href="#">{{#str}}releasemarks, local_teameval{{/str}}</a></li>
+{{/release}}
+{{#feedback}}
+    <li class="tab" data-tab-content-id="feedback-{{uniqid}}"><a href="#">{{#str}}feedback, local_teameval{{/str}}</a></li>
+{{/feedback}}
+</ul>
+</nav>
+<div class="tabs-content">
+    {{#questionnaire}}
+    <div class="tab-content" id="questionnaire-{{uniqid}}">
+    {{{questionnaire}}}
+    {{{addquestion}}}
+    </div>
+    {{/questionnaire}}
+    {{#results}}
+    <div class="tab-content" id="results-{{uniqid}}">
+    {{{results}}}
+    </div>
+    {{/results}}
+    {{#release}}
+    <div class="tab-content" id="release-{{uniqid}}">
+    {{{release}}}
+    </div>
+    {{/release}}
+    {{#feedback}}
+    <div class="tab-content" id="feedback-{{uniqid}}">
+    {{{feedback}}}
+    </div>
+    {{/feedback}}
+</div>
+</div>
+
+{{#js}}
+{{#hiderelease}}
+
+require(['jquery'], function($) {
+    $('.local-teameval-containerbox .tab.release').hide();
+});
+
+{{/hiderelease}}
+{{/js}}

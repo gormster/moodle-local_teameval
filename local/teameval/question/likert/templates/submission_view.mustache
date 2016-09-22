@@ -1,0 +1,350 @@
+{{! @template teamevalquestion_likert/submission_view
+
+Note that "grid" and "waterfall" should not be simultaneously true except in debugging circumstances
+
+Example context (json): {
+
+"title": "Example question",
+"description": "Example question description",
+"self": true,
+"grid": true,
+"waterfall": true,
+"headers": [
+    {
+        "ord": 1,
+        "remaining": 4,
+        "name": "Yourself",
+        "previous": [
+        ]
+    },
+    {
+        "ord": 2,
+        "remaining": 3,
+        "name": "User 2",
+        "previous": [
+            "Yourself"
+        ]
+    },
+    {
+        "ord": 3,
+        "remaining": 2,
+        "name": "User 3",
+        "previous": [
+            "Yourself",
+            "User 2"
+        ]
+    },
+    {
+        "ord": 4,
+        "remaining": 1,
+        "name": "User 4",
+        "previous": [
+            "Yourself",
+            "User 2",
+            "User 3"
+        ]
+    }
+],
+
+"options": [
+    {
+        "value": 1,
+        "meaning": "This person is not very good at this criterion.",
+        "users": [
+            {
+                "name": "Yourself",
+                "userid": 1,
+                "checked": true
+            },
+            {
+                "name": "User 2",
+                "userid": 2,
+                "checked": false
+            },
+            {
+                "name": "User 3",
+                "userid": 3,
+                "checked": false
+            },
+            {
+                "name": "User 4",
+                "userid": 4,
+                "checked": false
+            }
+        ]
+    },
+    {
+        "value": 2,
+        "meaning": "This person is alright at this criterion.",
+        "users": [
+            {
+                "name": "Yourself",
+                "userid": 1,
+                "checked": false
+            },
+            {
+                "name": "User 2",
+                "userid": 2,
+                "checked": true
+            },
+            {
+                "name": "User 3",
+                "userid": 3,
+                "checked": false
+            },
+            {
+                "name": "User 4",
+                "userid": 4,
+                "checked": false
+            }
+        ]
+    },
+    {
+        "value": 3,
+        "meaning": "This person is very good at this criterion.",
+        "users": [
+            {
+                "name": "Yourself",
+                "userid": 1,
+                "checked": false
+            },
+            {
+                "name": "User 2",
+                "userid": 2,
+                "checked": false
+            },
+            {
+                "name": "User 3",
+                "userid": 3,
+                "checked": true
+            },
+            {
+                "name": "User 4",
+                "userid": 4,
+                "checked": false
+            }
+        ]
+    }
+],
+
+"users": [
+    {
+        "userid": 1,
+        "name": "Yourself",
+        "options": [
+            {
+                "value": 1,
+                "checked": true
+            },
+            {
+                "value": 2,
+                "checked": false
+            },
+            {
+                "value": 3,
+                "checked": false
+            }
+        ]
+    },
+    {
+        "userid": 2,
+        "name": "Test User 2",
+        "options": [
+            {
+                "value": 1,
+                "checked": false
+            },
+            {
+                "value": 2,
+                "checked": true
+            },
+            {
+                "value": 3,
+                "checked": false
+            }
+        ]
+    },
+    {
+        "userid": 3,
+        "name": "Test User 3",
+        "options": [
+            {
+                "value": 1,
+                "checked": false
+            },
+            {
+                "value": 2,
+                "checked": false
+            },
+            {
+                "value": 3,
+                "checked": true
+            }
+        ]
+    },
+    {
+        "userid": 4,
+        "name": "Test User 4",
+        "options": [
+            {
+                "value": 1,
+                "checked": false
+            },
+            {
+                "value": 2,
+                "checked": false
+            },
+            {
+                "value": 3,
+                "checked": false
+            }
+        ]
+    }
+]
+
+}
+
+}}<div id="question-content-{{uniqid}}" class="teamevalquestion-likert-question-submission">
+    <h3>{{title}}</h3>
+    {{description}}
+
+    {{#grid}}
+    <table class="responses grid{{#self}} self{{/self}}">
+        <thead>
+            <tr>
+            <th> ... </th>
+            {{#options}}
+                <th style="width:{{optionwidth}}%">{{value}}{{#meaning}}: {{meaning}}{{/meaning}}</th>
+            {{/options}}
+            </tr>
+        </thead>
+        <tbody>
+            {{#users}}
+            <tr>
+                <th scope="row">{{name}}</th>
+                {{#options}}
+                    <td>{{#locked}}
+                    {{#checked}}{{#pix}} t/check, core {{/pix}}{{/checked}}
+                    {{/locked}}
+                    {{^locked}}
+                    <input type="radio" name="question-{{uniqid}}-response-{{userid}}" value="{{value}}" title="{{name}}" data-touser="{{userid}}" {{#checked}}checked{{/checked}} />
+                    {{/locked}}</td>
+                {{/options}}
+            </tr>
+            {{/users}}
+        </tbody>
+    </table>
+    {{/grid}}
+
+    {{#waterfall}}
+    <table class="responses waterfall {{#self}}self{{/self}}">
+        <thead>
+            {{#headers}}
+            <tr>
+                {{#previous}}
+                    <td title="{{.}}">&nbsp;</td>
+                {{/previous}}
+                <td title="{{name}}" class="first">&nbsp;</td>
+                {{#remaining}}
+                <td title="{{name}}" colspan="{{remaining}}" class="first remaining">&nbsp;</td>
+                {{/remaining}}
+                <th>{{name}}</th>
+            </tr>
+            {{/headers}}
+            <tr>
+                {{#headers}}
+                <td>&nbsp;</td>
+                {{/headers}}
+                <th class="criteria value">&nbsp;</th>
+                <th class="criteria meaning">{{#str}}criteria, teamevalquestion_likert{{/str}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#options}}
+            <tr>
+                {{#users}}
+                    <td>
+                    {{#locked}}
+                    {{#checked}}{{#pix}} t/check, core {{/pix}}{{/checked}}
+                    {{/locked}}
+                    {{^locked}}<input type="radio" name="question-{{uniqid}}-response-{{userid}}" value="{{value}}" title="{{name}}" data-touser="{{userid}}" {{#checked}}checked{{/checked}} />
+                    {{/locked}}</td>
+                {{/users}}
+                <td class="criteria value">
+                {{value}}
+                </td>
+                <td class="criteria meaning">
+                {{meaning}}
+                </td>
+            </tr>
+            {{/options}}
+        </tbody>
+    </table>
+    {{/waterfall}}
+    <div class="incomplete-indicator">{{#str}} incompleteadvice, local_teameval {{/str}}</div>
+</div>
+{{#js}}{{#_notset}}<script>{{/_notset}}
+require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
+    var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
+
+    {{^locked}}
+    function checkComplete() {
+        var userids = [{{#users}}{{userid}},{{/users}}];
+
+        var markedUsers = questionContainer.find('input:radio:checked').map(function() { return $(this).data('touser'); }).get();
+
+        var missingUsers = userids.filter(function(v) { return markedUsers.indexOf(v) == -1; });
+
+        if (missingUsers.length > 0) {
+            questionContainer.parent().addClass('incomplete');
+        } else {
+            questionContainer.parent().removeClass('incomplete');
+        }
+
+        return (missingUsers.length > 0);
+    }
+    {{/locked}}
+
+    {{#incomplete}}
+    questionContainer.parent().addClass('incomplete');
+    {{/incomplete}}
+
+    questionContainer.on("delete", function () {
+        var promises = ajax.call([{
+            methodname: 'teamevalquestion_likert_delete_question',
+            args: {
+                teamevalid: {{_id}},
+                id: {{id}}
+            }
+        }]);
+
+        return promises[0];
+    });
+
+    questionContainer.on("submit", function () {
+        var marks = [];
+        $('#question-content-{{uniqid}} .responses tbody input[type="radio"]:checked').each(function(v, k) {
+            var toUser = $(this).data('touser');
+            var m = {};
+            m.touser = toUser;
+            m.value = this.value;
+            marks.push(m);
+        });
+
+        var promises = ajax.call([{
+            methodname: 'teamevalquestion_likert_submit_response',
+            args: {
+                teamevalid: {{_id}},
+                id: {{id}},
+                marks: marks
+            }
+        }]);
+
+        var incomplete = checkComplete();
+
+        return promises[0].then(function() {
+            return {'incomplete': incomplete};
+        });
+    });
+});
+{{/js}}

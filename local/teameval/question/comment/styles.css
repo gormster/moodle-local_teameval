@@ -1,0 +1,59 @@
+.teamevalquestion-comment-container h3 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.teamevalquestion-comment-container .description {
+    margin-bottom: 1em;
+}
+
+.teamevalquestion-comment-container .optional-advice {
+    margin-bottom: .5em;
+    color: #999;
+    font-style: italic;
+}
+
+.teamevalquestion-comment-container table.comments {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.teamevalquestion-comment-container .comments th {
+    vertical-align: top;
+    padding-right: 1em;
+    width: 1px;
+    white-space: nowrap;
+}
+
+.teamevalquestion-comment-container .comments textarea {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.teamevalquestion-comment-container .comments tr.self {
+    background-color: rgba(120,230,170,0.2);
+}
+
+.teamevalquestion-comment-container .nocomment {
+    color: #999;
+    font-style: italic;
+}
+
+.teamevalquestion-comment-container .incomplete-indicator {
+    color: #A00;
+    font-weight: bold;
+    padding: 0.5em;
+    display: none;
+}
+
+.incomplete .teamevalquestion-comment-container .incomplete-indicator {
+    display: block;
+}
+
+.teamevalquestion-comment-full-comment {
+    width:50%;
+    background-color: white;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    padding: 10px;
+}
+

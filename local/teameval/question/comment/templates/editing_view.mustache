@@ -1,0 +1,101 @@
+<div class="local-teamevalquestion-comment" id="question-content-{{uniqid}}">
+    <div class="control-group">
+        <label class="control-label" for="question-title-{{uniqid}}">{{#str}}title, teamevalquestion_comment{{/str}}</label>
+        <div class="controls">
+            <input type="text" maxlength="255" id="question-title-{{uniqid}}" placeholder="Title" value="{{title}}" />
+            <span class="help-inline"></span>
+        </div>
+
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="question-description-{{uniqid}}">{{#str}}description, teamevalquestion_comment{{/str}}</label>
+        <div class="controls">
+            <textarea id="question-description-{{uniqid}}">{{description}}</textarea>
+            <span class="help-inline"></span>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="control-label"><input type="checkbox" id="question-anonymous-{{uniqid}}" {{#anonymous}} checked="checked" {{/anonymous}} {{#locked}} disabled="disabled" {{/locked}} /> {{#str}}anonymous, teamevalquestion_comment{{/str}}</label>    
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="control-label"><input type="checkbox" id="question-optional-{{uniqid}}" {{#optional}} checked="checked" {{/optional}} {{#locked}} disabled="disabled" {{/locked}} /> {{#str}}optional, teamevalquestion_comment{{/str}}</label>    
+        </div>
+    </div>
+</div>
+{{#js}}
+{{#_notset}}<script type="text/javascript">{{/_notset}}
+require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
+
+    var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
+
+    var Strings = {};
+    Strings['exampleuser'] = "{{#str}} exampleuser, local_teameval {{/str}}";
+    Strings['yourself'] = "{{#str}} yourself, local_teameval {{/str}}";
+    Strings['titleordescription'] = "{{#str}} titleordescription, teamevalquestion_comment {{/str}}";
+
+    questionContainer.on("save", function(evt, ordinal) {
+
+        var deferred = $.Deferred();
+
+        var data = { teamevalid: {{_id}} };
+        {{#id}}
+        data.id = {{id}};
+        {{/id}}
+        data.ordinal = ordinal;
+
+        data.title = $('#question-title-{{uniqid}}').val();
+        data.description = $('#question-description-{{uniqid}}').val();
+        data.anonymous = $('#question-anonymous-{{uniqid}}').prop('checked');
+        data.optional = $('#question-optional-{{uniqid}}').prop('checked');
+
+        // validate that data
+        console.log(data.title.trim().length, data.description.trim().length);
+        if ((data.title.trim().length == 0) && (data.description.trim().length == 0)) {
+            
+            $('#question-title-{{uniqid}}, #question-description-{{uniqid}}')
+                .closest('.control-group').addClass('error').end()
+                .next('.help-inline').text(Strings['titleordescription']);
+
+            deferred.reject();
+
+        } else {
+
+            // remove all error states
+            $('.control-group').removeClass('error');
+            $('.help-inline').empty();
+
+            var promises = ajax.call([{
+                methodname: 'teamevalquestion_comment_update_question',
+                args: data
+            }]);
+
+            var demoUsers = [{ userid: 0, name: "Example User" }];
+            {{#_self}}demoUsers.unshift({userid: -1, name: "Yourself", self: true});{{/_self}}
+
+            var submissionContext = $.extend({}, data, {
+                users: demoUsers
+            });
+
+            var editingContext = data;
+
+            promises[0].done(function(result) {
+                data.id = result;
+                submissionContext.id = result;
+                editingContext.id = result;
+                deferred.resolve(result, submissionContext, editingContext);
+            });
+
+            promises[0].fail(notification.exception);
+
+        }
+
+        return deferred;
+
+    });
+
+});
+
+{{/js}}

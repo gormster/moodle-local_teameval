@@ -1,0 +1,65 @@
+.teamevalreport-feedback–container table {
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid #666;
+    margin: 10px 0px;
+}
+
+.teamevalreport-feedback–container h2 .rejectrelease {
+    font-size: 50%;
+    float: right;
+}
+
+.teamevalreport-feedback–container .marker-name {
+    font-size: 125%;
+    text-align: center;
+    background-color: #bbd;
+}
+
+.teamevalreport-feedback–container .marker-name th {
+    padding: 0.5em;
+}
+
+.teamevalreport-feedback–container .question-title{
+    font-size: 110%;
+    text-align: center;
+    border: 1px solid #666;
+    padding: 0.5em;
+}
+
+.teamevalreport-feedback–container tr.odd {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.teamevalreport-feedback–container th.marked-name {
+    width: 20%;
+    text-align: right;
+    padding: 0.5em;
+    vertical-align: middle;
+}
+
+.teamevalreport-feedback–container td.feedback {
+    width:80%;
+    padding: 0.5em;
+}
+
+.teamevalreport-feedback–container td.switch {
+    vertical-align: middle;
+}
+
+.teamevalreport-feedback–container .feedback-from {
+    font-size: 70%;
+    line-height: 70%;
+    font-weight: normal;
+    color: #666;
+    margin:0;
+    padding:0;
+}
+
+.teamevalreport-feedback–container .feedback-about {
+    font-size: 70%;
+    line-height: 70%;
+    font-weight: normal;
+    color: #666;
+    font-style: italic;
+}

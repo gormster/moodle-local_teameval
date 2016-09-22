@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/teameval/db" VERSION="20160624" COMMENT="XMLDB file for Moodle local/teameval"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="teameval" COMMENT="Settings for teameval instances.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Useless primary key"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Course module this teameval is associated with"/>
+        <FIELD NAME="contextid" TYPE="int" LENGTH="11" NOTNULL="false" SEQUENCE="false" COMMENT="If cmid is null, then this teameval is a template. Templates are associated with a context represented by this contextid. If cmid is set this does not need to be set."/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="If evaluation is enabled for this course module"/>
+        <FIELD NAME="public" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="If the questionnaire for this puppy is public. Otherwise it is only available within the course or course category depending on site-wide settings."/>
+        <FIELD NAME="self" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="True if self-assessment is enabled for this team evaluation"/>
+        <FIELD NAME="fraction" TYPE="number" LENGTH="4" NOTNULL="true" DEFAULT="50" SEQUENCE="false" DECIMALS="2" COMMENT="The percentage of the evaluation score that is used to calculate a user's final score."/>
+        <FIELD NAME="noncompletionpenalty" TYPE="number" LENGTH="4" NOTNULL="true" DEFAULT="10" SEQUENCE="false" DECIMALS="2" COMMENT="The penalty for non-completion of the evaluation form."/>
+        <FIELD NAME="deadline" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Last possible date for submission of the questionnaire by users."/>
+        <FIELD NAME="autorelease" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="1" SEQUENCE="false" COMMENT="Automatically release marks to users. On by default"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="For templates"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_cmid" UNIQUE="false" FIELDS="cmid"/>
+        <INDEX NAME="idx_contextid" UNIQUE="false" FIELDS="contextid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="teameval_questions" COMMENT="Questions for teameval instances.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="teamevalid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="ID of the teameval this question belongs to"/>
+        <FIELD NAME="qtype" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Subplugin identifier for teamevalquestion subplugin"/>
+        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Instance id for the subplugin's own database tables"/>
+        <FIELD NAME="ordinal" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Ordering number for questions"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_teamevalid" TYPE="foreign" FIELDS="teamevalid" REFTABLE="teameval" REFFIELDS="id"/>
+        <KEY NAME="uq_questiontypeid" TYPE="unique" FIELDS="qtype, questionid"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="teameval_release" COMMENT="Mark release objects">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the course module to which this teameval belongs"/>
+        <FIELD NAME="level" TYPE="int" LENGTH="2" NOTNULL="true" SEQUENCE="false" COMMENT="0 = RELEASE_ALL 1 = RELEASE_GROUP 2 = RELEASE_USER"/>
+        <FIELD NAME="target" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the group or user whose marks are being released. 0 if level == RELEASE_ALL."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="combo" TYPE="unique" FIELDS="cmid, level, target"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="cmid" UNIQUE="false" FIELDS="cmid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="teameval_rescind" COMMENT="Responses with rescinded feedback">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Question ID for the response"/>
+        <FIELD NAME="markerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User ID of the respondant"/>
+        <FIELD NAME="targetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User ID of the user the feedback is for"/>
+        <FIELD NAME="state" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="-1 for rescinded, 0 for unset, 1 for approved."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="target" UNIQUE="true" FIELDS="questionid, markerid, targetid"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

@@ -1,0 +1,82 @@
+{{!
+    @template local_teameval/feedback
+
+    Example context (json): {
+    
+        "score": "67.0",
+        "questions": [
+            {
+                "title": "Example Question 1",
+                "teammates": [
+                    {
+                        "name": "Yourself",
+                        "self": true,
+                        "feedback": "I'm the best!"
+                    },
+                    {
+                        "name": "Example User 2",
+                        "feedback": "Feedback from example user 2."
+                    },
+                    {
+                        "name": "Example User 3",
+                        "feedback": "Feedback from example user 3."
+                    },
+                    {
+                        "name": "Example User 4",
+                        "feedback": "Feedback from example user 4."
+                    }
+                ]
+            },
+            {
+                "title": "Example Question 2",
+                "teammates": [
+                    {
+                        "name": "Yourself",
+                        "self": true,
+                        "feedback": "I'm the best there ever was!"
+                    },
+                    {
+                        "name": "Example User 2",
+                        "feedback": "Some more feedback from example user 2."
+                    },
+                    {
+                        "name": "Example User 3",
+                        "feedback": "Some more feedback from example user 3."
+                    },
+                    {
+                        "name": "Example User 4",
+                        "feedback": "Some more feedback from example user 4."
+                    }
+                ]
+            }
+        ]
+    }
+
+}}
+<div class="local-teameval-feedback">
+    {{#score}}
+    <div class="results">{{#str}} youradjustedscore, local_teameval {{/str}}: <span class="score">{{score}}</span></div>
+    {{/score}}
+    <div class="feedback">
+    <h3>{{#str}} yourteammatesfeedback, local_teameval {{/str}}:</h3>
+    {{#questions}}
+    <h4>{{title}}</h4>
+    <table>
+        <thead>
+            <tr>
+                {{^anonymous}}<th>{{#str}} name, core {{/str}}</th>{{/anonymous}}
+                <th>{{#str}} feedback, local_teameval {{/str}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#teammates}}
+            <tr>
+                {{^anonymous}}<th scope="row"{{#self}}class="self"{{/self}}>{{{userpic}}} {{name}}</th>{{/anonymous}}
+                <td>{{feedback}}</td>
+            </tr>
+            {{/teammates}}
+        </tbody>
+    </table>
+    {{/questions}}
+    </div>
+</div>
