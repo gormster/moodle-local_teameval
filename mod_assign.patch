@@ -1,0 +1,311 @@
+diff --git a/mod/assign/classes/evaluation_context.php b/mod/assign/classes/evaluation_context.php
+new file mode 100644
+index 0000000..1d7bf1a
+--- /dev/null
++++ b/mod/assign/classes/evaluation_context.php
+@@ -0,0 +1,91 @@
++<?php
++
++namespace mod_assign;
++
++class evaluation_context extends \local_teameval\evaluation_context {
++
++    protected $assign;
++
++    public function __construct(\assign $assign) {
++        $this->assign = $assign;
++        parent::__construct($assign->get_course_module());
++    }
++
++    public function evaluation_permitted($userid = null) {
++        $enabled = $this->assign->get_instance()->teamsubmission;
++        if ($userid) {
++            if ($this->assign->is_any_submission_plugin_enabled()) {
++                $groupsub = $this->assign->get_group_submission($userid, 0, false);
++                if (($groupsub == false) ||
++                    ($groupsub->status != ASSIGN_SUBMISSION_STATUS_SUBMITTED) ||
++                    ($this->assign->submission_empty($groupsub))) {
++                    $enabled = false;
++                }
++            } else {
++                $grade = $this->assign->get_user_grade($userid, false);
++            if (!($grade && $grade->grade !== null && $grade->grade >= 0)) {
++                $enabled = false;
++            }
++            }
++        }
++        return $enabled;
++
++    }
++
++    public function group_for_user($userid) {
++        return $this->assign->get_submission_group($userid);
++    }
++
++    public function all_groups() {
++        $grouping = $this->assign->get_instance()->teamsubmissiongroupingid;
++        $groups = groups_get_all_groups($this->assign->get_course()->id, 0, $grouping);
++        return $groups;
++    }
++
++    public function marking_users($fields = 'u.id') {
++        $grouping = $this->assign->get_instance()->teamsubmissiongroupingid;
++
++        $groups = groups_get_all_groups($this->assign->get_course()->id, 0, $grouping, 'g.id');
++
++        // we want only group IDs
++        $groups = array_keys($groups);
++
++        $ctx = $this->assign->get_context();
++
++        return get_users_by_capability($ctx, 'local/teameval:submitquestionnaire', $fields, '', '', '', $groups);
++    }
++
++    public function grade_for_group($groupid) {
++        //TODO: you can actually assign different grades for everyone
++        //check if that has happened
++
++        // get any user from this group
++        $mems = groups_get_members($groupid, 'u.id');
++        $user = key($mems);
++
++        if ($user > 0) {
++            $grade = $this->assign->get_user_grade($user, false);
++            if ($grade) {
++                return $grade->grade;
++            }
++        }
++
++        return null;
++    }
++
++    public function trigger_grade_update($users = null) {
++        global $DB;
++
++        if (is_null($users)) {
++            $users = array_keys($this->assign->list_participants(0, true));
++        }
++
++        foreach($users as $u) {
++            $grade = $this->assign->get_user_grade($u, false);
++            if ($grade) {
++                $this->assign->update_grade($grade);
++            }
++        }
++    }
++
++}
+\ No newline at end of file
+diff --git a/mod/assign/lib.php b/mod/assign/lib.php
+index 750404c..8258155 100644
+--- a/mod/assign/lib.php
++++ b/mod/assign/lib.php
+@@ -68,6 +68,8 @@ function assign_reset_userdata($data) {
+     global $CFG, $DB;
+     require_once($CFG->dirroot . '/mod/assign/locallib.php');
+ 
++    $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
++
+     $status = array();
+     $params = array('courseid'=>$data->courseid);
+     $sql = "SELECT a.id FROM {assign} a WHERE a.course=:courseid";
+@@ -82,8 +84,14 @@ function assign_reset_userdata($data) {
+             $context = context_module::instance($cm->id);
+             $assignment = new assign($context, $cm, $course);
+             $status = array_merge($status, $assignment->reset_userdata($data));
++
++            if ($teameval_plugin) {
++                $evalcontext = new \mod_assign\evaluation_context($assignment);
++                $status = array_merge($status, $evalcontext->reset_userdata($data));
++            }
+         }
+     }
++
+     return $status;
+ }
+ 
+@@ -166,6 +174,11 @@ function assign_reset_course_form_definition(&$mform) {
+     $mform->addElement('header', 'assignheader', get_string('modulenameplural', 'assign'));
+     $name = get_string('deleteallsubmissions', 'assign');
+     $mform->addElement('advcheckbox', 'reset_assign_submissions', $name);
++
++    $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
++    if ($teameval_plugin) {
++        \mod_assign\evaluation_context::reset_course_form_definition($mform);
++    }
+ }
+ 
+ /**
+@@ -174,7 +187,12 @@ function assign_reset_course_form_definition(&$mform) {
+  * @return array
+  */
+ function assign_reset_course_form_defaults($course) {
+-    return array('reset_assign_submissions'=>1);
++    $defaults = array('reset_assign_submissions'=>1);
++    $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
++    if ($teameval_plugin) {
++        $defaults = array_merge($defaults, \mod_assign\evaluation_context::reset_course_form_defaults($course));
++    }
++    return $defaults;
+ }
+ 
+ /**
+@@ -346,7 +364,7 @@ function assign_page_type_list($pagetype, $parentcontext, $currentcontext) {
+  * @return true
+  */
+ function assign_print_overview($courses, &$htmlarray) {
+-    global $CFG, $DB;
++    global $CFG, $DB, $USER;
+ 
+     if (empty($courses) || !is_array($courses) || count($courses) == 0) {
+         return true;
+@@ -407,6 +425,12 @@ function assign_print_overview($courses, &$htmlarray) {
+ 
+         $context = context_module::instance($assignment->coursemodule);
+ 
++        $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
++        if($teameval_plugin) {
++            $cm = get_course_and_cm_from_cmid($assignment->coursemodule)[1];
++            $evalcontext = assign_get_evaluation_context($cm);
++        }
++
+         // Does the submission status of the assignment require notification?
+         if (has_capability('mod/assign:submit', $context)) {
+             // Does the submission status of the assignment require notification?
+@@ -424,7 +448,17 @@ function assign_print_overview($courses, &$htmlarray) {
+             $gradedetails = false;
+         }
+ 
+-        if (empty($submitdetails) && empty($gradedetails)) {
++        if ($teameval_plugin && has_capability('local/teameval:submitquestionnaire', $context) && $evalcontext->evaluation_enabled() && $evalcontext->evaluation_permitted($USER->id)) {
++            $usercompletion = $evalcontext->user_completion($USER->id);
++            if ($usercompletion < 1) {
++                $content = get_string('pluginname', 'local_teameval') . ': ' . get_string('incompleteoverview', 'local_teameval');
++                $evaluationdetails = html_writer::div($content, 'details');
++            }
++        } else {
++            $evaluationdetails = false;
++        }
++
++        if (empty($submitdetails) && empty($gradedetails) && empty($evaluationdetails)) {
+             // There is no need to display this assignment as there is nothing to notify.
+             continue;
+         }
+@@ -457,6 +491,7 @@ function assign_print_overview($courses, &$htmlarray) {
+             }
+         }
+ 
++
+         // Show only relevant information.
+         if (!empty($submitdetails)) {
+             $basestr .= $submitdetails;
+@@ -465,6 +500,11 @@ function assign_print_overview($courses, &$htmlarray) {
+         if (!empty($gradedetails)) {
+             $basestr .= $gradedetails;
+         }
++
++        if (!empty($evaluationdetails)) {
++            $basestr .= $evaluationdetails;
++        }
++
+         $basestr .= '</div>';
+ 
+         if (empty($htmlarray[$assignment->course]['assign'])) {
+@@ -1078,7 +1118,21 @@ function assign_grade_item_update($assign, $grades=null) {
+         $assign->courseid = $assign->course;
+     }
+ 
+-    $params = array('itemname'=>$assign->name, 'idnumber'=>$assign->cmidnumber);
++    $mod = get_coursemodule_from_instance('assign', $assign->id, $assign->courseid);
++    // the coursemodule might not yet be created.
++    if ($mod !== false) {
++        require_once($CFG->dirroot . '/mod/assign/locallib.php');
++        $cm = context_module::instance($mod->id);
++        $assignment = new assign($cm, null, null);
++    }
++
++    $params = array('itemname'=>$assign->name);
++
++    if (isset($cm)) {
++        $params['idnumber'] = $cm->id;
++    } else {
++        $params['idnumber'] = $assign->cmidnumber;
++    }
+ 
+     // Check if feedback plugin for gradebook is enabled, if yes then
+     // gradetype = GRADE_TYPE_TEXT else GRADE_TYPE_NONE.
+@@ -1087,10 +1141,6 @@ function assign_grade_item_update($assign, $grades=null) {
+     if (isset($assign->gradefeedbackenabled)) {
+         $gradefeedbackenabled = $assign->gradefeedbackenabled;
+     } else if ($assign->grade == 0) { // Grade feedback is needed only when grade == 0.
+-        require_once($CFG->dirroot . '/mod/assign/locallib.php');
+-        $mod = get_coursemodule_from_instance('assign', $assign->id, $assign->courseid);
+-        $cm = context_module::instance($mod->id);
+-        $assignment = new assign($cm, null, null);
+         $gradefeedbackenabled = $assignment->is_gradebook_feedback_enabled();
+     }
+ 
+@@ -1116,6 +1166,16 @@ function assign_grade_item_update($assign, $grades=null) {
+         $grades = null;
+     }
+ 
++    if (! is_null($grades)) {
++        $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
++        if ($teameval_plugin) {
++            $evalcontext = new \mod_assign\evaluation_context($assignment);
++            if ($evalcontext->evaluation_enabled()) {
++                $grades = $evalcontext->update_grades($grades);
++            }
++        }
++    }
++
+     return grade_update('mod/assign',
+                         $assign->courseid,
+                         'mod',
+@@ -1483,6 +1543,13 @@ function assign_pluginfile($course,
+     send_stored_file($file, 0, 0, $forcedownload, $options);
+ }
+ 
++function assign_get_evaluation_context($cm) {
++    global $CFG;
++    require_once($CFG->dirroot . '/mod/assign/locallib.php');
++    $assign = new assign(context_module::instance($cm->id), $cm, null);
++    return new \mod_assign\evaluation_context($assign);
++}
++
+ /**
+  * Serve the grading panel as a fragment.
+  *
+diff --git a/mod/assign/locallib.php b/mod/assign/locallib.php
+index ac4bcdd..1dce6fa 100644
+--- a/mod/assign/locallib.php
++++ b/mod/assign/locallib.php
+@@ -4851,6 +4851,16 @@ class assign {
+             $o .= $this->view_student_summary($USER, true);
+         }
+ 
++        // Include teameval
++        // TODO: better way of determing if plugin is installed
++
++        $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
++        if ($teameval_plugin) {
++            $teameval_renderer = $PAGE->get_renderer('local_teameval');
++            $teameval = \local_teameval\output\team_evaluation_block::from_cmid($this->coursemodule->id);
++            $o .= $teameval_renderer->render($teameval);
++        }
++
+         $o .= $this->view_footer();
+ 
+         \mod_assign\event\submission_status_viewed::create_from_assign($this)->trigger();
+diff --git a/mod/assign/version.php b/mod/assign/version.php
+index 7b414f8..4c1b2c9 100644
+--- a/mod/assign/version.php
++++ b/mod/assign/version.php
+@@ -25,6 +25,6 @@
+ defined('MOODLE_INTERNAL') || die();
+ 
+ $plugin->component = 'mod_assign'; // Full name of the plugin (used for diagnostics).
+-$plugin->version  = 2016052301;    // The current module version (Date: YYYYMMDDXX).
++$plugin->version  = 2016052302;    // The current module version (Date: YYYYMMDDXX).
+ $plugin->requires = 2016051900;    // Requires this Moodle version.
+ $plugin->cron     = 60;
