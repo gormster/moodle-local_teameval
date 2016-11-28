@@ -1,0 +1,155 @@
+.teamevalquestion-split100 .hundred {
+  width: 100%;
+  border: 1px solid black;
+  position: relative;
+  overflow: hidden;
+  height: 100px;
+}
+
+.teamevalquestion-split100 .hundred .split {
+  vertical-align: middle;
+  text-align: center;
+  position: absolute;
+  height: 100%;
+  -webkit-user-select: none;
+}
+
+.teamevalquestion-split100 .hundred .split:nth-child(4n+1) {
+  background-color: hsla(0, 0%, 0%, 0.04);
+}
+
+.teamevalquestion-split100 .hundred .split:nth-child(4n+3) {
+  background-color: hsla(0, 0%, 0%, 0.01);
+}
+
+.teamevalquestion-split100 .hundred .split.self {
+  background-color: rgba(120,230,170,0.2);
+}
+
+.teamevalquestion-split100 .hundred .split:before {
+  content: "";
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+
+.teamevalquestion-split100 .hundred .split .split-label {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.teamevalquestion-split100 .hundred .split .split-label .value {
+  display: block;
+  font-weight: bold;
+  margin-left: -5px;
+  margin-right: -5px;
+}
+
+.teamevalquestion-split100 .hundred .handle {
+  height: 100%;
+  cursor: col-resize;
+  position: absolute;
+  top: 0px;
+  z-index: 1;
+
+  width: 20px;
+  margin-left: -10px;
+  background: linear-gradient(to right, white 0px, white 1px, #d9d9d9 1px, rgba(217, 217, 217, 0) 1.5px, rgba(255, 255, 255, 0) 2px, white 2px, white 3px, #d9d9d9 3px, rgba(217, 217, 217, 0) 3.5px) center/3px 30% no-repeat, linear-gradient(to right, transparent 0%, #e6e6e6 0%, #e6e6e6 100%, transparent 100%) center/7px 100% no-repeat;
+}
+
+.teamevalquestion-split100 .hundred .divider {
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  z-index: 1;
+  width: 3px;
+  margin-left: -1px;
+  background-color: #666;
+}
+
+
+.teamevalquestion-split100 .overflows .name {
+  display: none;
+  clear: both;
+  min-height: 20px;
+  padding: 2px 5px;
+  box-sizing: border-box;
+  position: relative;
+  -webkit-user-select: none;
+}
+
+.teamevalquestion-split100 .overflows .name.left {
+  float: left;
+  text-align: left;
+}
+
+.teamevalquestion-split100 .overflows .name.right {
+  float: right;
+  text-align: right;
+}
+
+.teamevalquestion-split100 .overflows .name span {
+  border: 1px solid black;
+  display: inline-block;
+  padding: 2px 5px;
+  margin: 0 -1px;
+  background: white;
+}
+
+.teamevalquestion-split100 .overflows .name:nth-child(odd) span {
+  background-color: hsl(0, 0%, 96%);
+}
+
+.teamevalquestion-split100 .overflows .name:nth-child(even) span {
+  background-color: hsl(0, 0%, 99%);
+}
+
+.teamevalquestion-split100 .overflows .name.self span {
+  background-color: rgb(234,249,239);
+}
+
+.teamevalquestion-split100 .overflows .name .hook {
+  width: 10px;
+  height: 10000px;
+  margin-top: -9980px;
+  display: none;
+  vertical-align: middle;
+  z-index: 10;
+  overflow-y: visible;
+}
+
+
+
+.teamevalquestion-split100 .overflows .name.left .hook.left,
+.teamevalquestion-split100 .overflows .name.right .hook.right {
+  display: inline-block;
+}
+
+.teamevalquestion-split100 .overflows .hook.left {
+  background: url([[pix:teamevalquestion_split100|left]]) 10px 4990px/10px 10000px;
+}
+
+.teamevalquestion-split100 .overflows .hook.right {
+  background: url([[pix:teamevalquestion_split100|right]]) 10px 4990px/10px 10000px;
+}
+
+.teamevalquestion-split100 .overflows .middlehook {
+  background: url([[pix:teamevalquestion_split100|middle]]) 10px -20px/12px 10000px no-repeat;
+  display: none;
+  width: 100%;
+  height: 200px;
+  margin-top: -200px;
+}
+
+.teamevalquestion-split100 .overflows .name.middle .hook.middle {
+  display: block;
+}
+
+.teamevalquestion-split100 .overflows {
+  padding-top: 5px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  zoom: 1;
+  position: relative;
+}
+

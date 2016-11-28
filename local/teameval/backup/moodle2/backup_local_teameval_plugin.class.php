@@ -1,5 +1,7 @@
 <?php
 
+defined('MOODLE_INTERNAL') || die();
+
 use local_teameval\team_evaluation;
 
 class backup_local_teameval_plugin extends backup_local_plugin {

@@ -8,6 +8,8 @@ class mock_question implements question {
 
     private $_min = 0;
     private $_max = 5;
+    private $_completion = true;
+    private $_value = true;
 
     public $id;
 
@@ -23,24 +25,28 @@ class mock_question implements question {
     }
 
     public function __get($name) {
-        if (in_array($name, ['min', 'max'])) {
+        if (in_array($name, ['min', 'max', 'completion', 'value'])) {
             $name = '_'.$name;
             return $this->underlying->$name;
         }
     }
 
     public function __set($name, $value) {
-        if (in_array($name, ['min', 'max'])) {
+        if (in_array($name, ['min', 'max', 'completion', 'value'])) {
             $name = '_'.$name;
             $this->underlying->$name = $value;
         }
     }
 
-    public function submission_view($userid, $locked = false) {
+    public function submission_view($locked = false) {
 
     }
 
     public function editing_view() {
+
+    }
+
+    public function context_data(\renderer_base $output, $locked = false) {
 
     }
 
@@ -49,11 +55,11 @@ class mock_question implements question {
     }
 
     public function has_value() {
-        return true;
+        return $this->underlying->value;
     }
 
     public function has_completion() {
-        return true;
+        return $this->underlying->completion;
     }
 
     public function minimum_value() {

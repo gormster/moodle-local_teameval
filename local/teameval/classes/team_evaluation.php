@@ -17,6 +17,7 @@ use cache;
 
 use coding_exception;
 use invalid_parameter_exception;
+use moodle_exception;
 
 define(__NAMESPACE__ . '\REPORT_PLUGIN_PREFERENCE', 'local_teameval_report_plugin');
 
@@ -79,12 +80,10 @@ class team_evaluation {
         return new team_evaluation(0, null, $contextid);
     }
 
-    public static function exists($id, $cmid = null, $contextid = null) {
+    public static function exists($id, $cmid = null) {
         global $DB;
         if ($cmid != null) {
             return $DB->record_exists('teameval', ['cmid' => $cmid]);
-        } else if ($contextid != null) {
-            return $DB->record_exists('teameval', ['contextid' => $cmid]);
         }
         return $DB->record_exists('teameval', ['id' => $id]);
     }
@@ -95,10 +94,10 @@ class team_evaluation {
 
     /**
      * Throw an exception if team eval does not exist or if capabilities are not met
-     * @param int|array $id Either straight integer or array of id type (id, cmid, contextid) => int id
+     * @param int|array|context|team_evaluation $id Either straight integer or array of id type (id, cmid, contextid) => int id
      * @param array $caps Array of capabilities to test.
      * @param array $options An array of optional extra tests.
-     * @return type
+     * @return context
      */
     public static function guard_capability($id, $caps = [], $options = []) {
         global $USER;
@@ -404,7 +403,8 @@ class team_evaluation {
         } else if (isset($this->settings->title)) {
             return $this->settings->title;
         } else {
-            return $this->get_context()->get_context_name();
+            // I think this is not actually possible to get called? But maybe, so we'll leave it in.
+            return $this->get_context()->get_context_name(); //@codeCoverageIgnore
         }
     }
 
@@ -546,13 +546,13 @@ class team_evaluation {
         global $DB;
 
         if ($transaction->class != 'question') {
-            throw new coding_exception('Wrong type of transaction handed to update_question');
+            throw new coding_exception('Wrong type of transaction handed to delete_question');
         }
 
         if ($transaction->querytype == SQL_QUERY_DELETE) {
             $DB->delete_records("teameval_questions", array("teamevalid" => $this->id, "qtype" => $transaction->polytype, "questionid" => $transaction->id));
         } else {
-            throw new coding_exception('Wrong type of transaction handed to update_question');
+            throw new coding_exception('Wrong type of transaction handed to delete_question');
         }
         
         $transaction->transaction->allow_commit();
@@ -628,10 +628,16 @@ class team_evaluation {
         return $has_value;
     }
 
+    /**
+     * @codeCoverageIgnore This is always mocked in our tests
+     */
     public function get_question_plugins() {
         return self::get_question_plugins_static();
     }
 
+    /**
+     * @codeCoverageIgnore This is always mocked in our tests
+     */
     public static function get_question_plugins_static() {
         static $_plugins;
         if (!isset($_plugins)) {
@@ -667,7 +673,7 @@ class team_evaluation {
         $records = $DB->get_records("teameval_questions", array("teamevalid" => $this->id), '', 'id, qtype, questionid');
 
         if (count($records) != count($order)) {
-            throw new moodle_error('questionidsoutofsync', 'teameval');
+            throw new moodle_exception('questionidsoutofsync', 'teameval');
         }
 
         // flip the records so that we've got type => questionids => ids
@@ -682,7 +688,7 @@ class team_evaluation {
             $type = $qid['type'];
             $id = $qid['id'];
             if (empty($questions[$type][$id])) {
-                throw new moodle_error('questionidsoutofsync', 'teameval');
+                throw new moodle_exception('questionidsoutofsync', 'teameval');
             }
             $r = $questions[$type][$id];
             $r->ordinal = $i;
@@ -745,6 +751,7 @@ class team_evaluation {
 
     /**
      * The reason why this questionnaire is locked.
+     * @codeCoverageIgnore
      */
     public static function questionnaire_locked_reason($reason) {
 
@@ -762,6 +769,7 @@ class team_evaluation {
      * This function gives help text to the user on why their questionnaire is locked.
      * Why is this static, taking an evalcontext? Because evalcontexts can exist independent
      * of a team_evaluation.
+     * @codeCoverageIgnore
      */
     public static function questionnaire_locked_hint($reason, $user, $evalcontext) {
 
@@ -842,6 +850,9 @@ class team_evaluation {
         return $marks_given / $num_questions;
     }
 
+    /**
+     * @codeCoverageIgnore we mock the evaluator in our tests
+     */
     public function get_evaluator() {
 
         if (! isset($this->evaluator)) {
@@ -1062,8 +1073,7 @@ class team_evaluation {
      * @return type
      */
     public function group_members($groupid) {
-        $groupcache = self::$groupcache;
-        if (!isset($groupcache[$groupid])) {
+        if (!isset(self::$groupcache[$groupid])) {
             if (empty($groupid)) {
                 $members = get_users_by_capability($this->context, 'local/teameval:submitquestionnaire');
             } else {
@@ -1072,11 +1082,15 @@ class team_evaluation {
                     return has_capability('local/teameval:submitquestionnaire', $this->context, $u->id, false);
                 });
             }
-            $groupcache[$groupid] = $members; 
+            self::$groupcache[$groupid] = $members; 
         } else {
-            $members = $groupcache[$groupid];
+            $members = self::$groupcache[$groupid];
         }
         return $members;
+    }
+
+    public static function _clear_groups_members_cache() {
+        self::$groupcache = [];   
     }
 
     /**
@@ -1101,7 +1115,7 @@ class team_evaluation {
 
         $group = $evalcontext->group_for_user($userid);
 
-        $unadjusted = $evalcontext->grade_for_group($group->id);
+        $unadjusted = $evalcontext->grade_for_group($group ? $group->id : 0);
 
         if ($this->marks_available($userid)) {
 
@@ -1327,6 +1341,11 @@ class team_evaluation {
     }
 
     public function marks_available($userid) {
+        // Before anything, check if the user can even submit in this teameval
+        if (!has_capability('local/teameval:submitquestionnaire', $this->context, $userid, false)) {
+            return false;
+        }
+
         // First check if the marks are released.
         if (!$this->marks_released($userid)) {
             return false;
@@ -1339,8 +1358,9 @@ class team_evaluation {
         }
 
         $grp = $this->group_for_user($userid);
+        $grpid = empty($grp) ? 0 : $grp->id;
 
-        if ($this->group_ready($grp->id)) {
+        if ($this->group_ready($grpid)) {
             return true;
         }
 
@@ -1521,7 +1541,12 @@ class team_evaluation {
 
 }
 
-//copied from core_component. why this is not a global function...
+
+/**
+ * copied from core_component. why this is not a global function...
+ * @return boolean true if developer mode is active
+ * @codeCoverageIgnore
+ */
 function is_developer() {
     global $CFG;
 

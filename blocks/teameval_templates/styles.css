@@ -1,0 +1,65 @@
+.teameval-template-title {
+        text-align: center;
+}
+
+.teameval-template-title input {
+        width: 50%;
+}
+
+.teameval-template-tree {
+        margin-left: 21px;
+        list-style: none;
+}
+
+.teameval-template-tree li.collapsible h4 {
+        cursor: pointer;
+        margin-left: -21px;
+        font-size:110%;
+}
+
+.teameval-template-tree li.collapsible h4:before {
+        vertical-align: middle;
+        padding-right: 5px;
+}
+
+.teameval-template-tree li.collapsible.collapsed h4:before {
+        content: url([[pix:t/collapsed]]);
+}
+
+.teameval-template-tree li.collapsible.expanded h4:before {
+        content: url([[pix:t/expanded]]);
+}
+
+.teameval-template-tree li.collapsible ul {
+        margin-left: 0;
+        list-style: none;
+}
+
+.teameval-template-tree li.collapsible.collapsed ul {
+        display: none;
+}
+
+.teameval-template-tree li.collapsible.expanded ul {
+        display: block;
+}
+
+.teameval-template-tree li.teameval-template-item a:before {
+        content: url([[pix:local_teameval|icon]]);
+        padding-right: 5px;
+}
+
+.teameval-templates-add-to-module {
+        border-bottom: 1px solid #999;
+        padding: 1em 0;
+        text-align: center;
+        margin-bottom: 1em;
+}
+
+.teameval-templates-add-to-module input {
+        margin: 5px 0;
+}
+
+.teameval-templates-delete-button {
+        text-align: center;
+        padding: 1em 0;
+}

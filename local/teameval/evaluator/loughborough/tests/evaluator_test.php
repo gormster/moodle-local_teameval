@@ -27,6 +27,8 @@ class teamevaluator_loughborough_evaluator_testcase extends advanced_testcase {
         $data = $this->getDataGenerator();
 
         $this->course = $data->create_course();
+
+        team_evaluation::_clear_groups_members_cache();
         
         $this->groups = [];
         $this->users = [];

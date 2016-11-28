@@ -32,6 +32,8 @@ class add_question implements renderable, templatable {
 
         $this->teamevalid = $teameval->id;
 
+        $this->contextid = $teameval->get_context()->id;
+
         $this->self = $teameval->get_settings()->self;
 
         $this->locked = $teameval->questionnaire_locked() !== false;
@@ -63,6 +65,7 @@ class add_question implements renderable, templatable {
         $c = new stdClass;
 
         $c->teamevalid = $this->teamevalid;
+        $c->contextid = $this->contextid;
         $c->self = $this->self;
         $c->locked = $this->locked;
         $c->subplugins = [];

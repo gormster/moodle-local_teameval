@@ -277,10 +277,10 @@ index 750404c..8258155 100644
   * Serve the grading panel as a fragment.
   *
 diff --git a/mod/assign/locallib.php b/mod/assign/locallib.php
-index ac4bcdd..1dce6fa 100644
+index 33e30bb..7130025 100644
 --- a/mod/assign/locallib.php
 +++ b/mod/assign/locallib.php
-@@ -4851,6 +4851,16 @@ class assign {
+@@ -4848,6 +4848,16 @@ class assign {
              $o .= $this->view_student_summary($USER, true);
          }
  

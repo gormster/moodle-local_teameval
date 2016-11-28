@@ -22,7 +22,8 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/notification', 'core/str'
 
                 var uiblocker = $('<div class="ui-blocker" />');
                 $(this).append(uiblocker);
-                var p = $(this).triggerHandler("submit");
+                var questionObject = $(this).data('question');
+                var p = questionObject.submit();
                 promises.push(p);
                 p.always(function () {
                     uiblocker.remove();

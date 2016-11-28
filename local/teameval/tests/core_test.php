@@ -84,6 +84,12 @@ class local_teameval_core_testcase extends advanced_testcase {
         $this->assertEquals($this->teameval->get_coursemodule(), $teameval->get_coursemodule());
         $this->assertEquals($this->teameval->get_context(), $teameval->get_context());
 
+
+        // and now we test the fail condition
+        
+        $this->setExpectedException('coding_exception');
+
+        $notateameval = new team_evaluation(null);
     }
 
     public function test_settings() {
@@ -124,6 +130,29 @@ class local_teameval_core_testcase extends advanced_testcase {
 
         $this->assertEquals($newsettings, $settings);
 
+    }
+
+    /**
+     * @expectedException coding_exception
+     * @expectedExceptionMessage does not exist
+     */
+    public function test_settings_fail() {
+
+        // technically this loop should execute zero times, but we're going to make sure
+        $n = 1;
+        while (team_evaluation::exists($this->teameval->id + $n)) {
+            $n += 1;
+        }
+
+        $notateameval = new team_evaluation($this->teameval->id + $n);
+    }
+
+    /** 
+     * @expectedException coding_exception
+     * @expectedExceptionMessage Undefined
+     */
+    public function test_property_access_fail() {
+        $nothing = $this->teameval->plumbus;
     }
 
     public function test_context_and_cm() {

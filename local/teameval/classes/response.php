@@ -35,9 +35,15 @@ interface response {
 
     /**
      * Human readable of above; for reports plugins
+     * 
+     * This is a subclass of our templatable abstract class for performance reasons. If you use JS
+     * in your template, even if you're just making a single AMD call to a loaded module, it causes 
+     * unacceptable slowdown in the browser for large reports. For this reason, you can nominate a 
+     * single AMD call to be made after the entire report has been rendered.
+     * 
      * @param int $userid Teammates user ID
      * @param string $source The plugin that is asking for this opinion. Use to customise appearance.
-     * @return renderable
+     * @return local_teameval\templatable
      */
     public function opinion_of_readable($userid, $source = null);
     

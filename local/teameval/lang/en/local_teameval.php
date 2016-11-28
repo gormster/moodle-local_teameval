@@ -93,3 +93,4 @@
     // ERRORS
 
     $string['contextnotchild'] = '{$a->child} is not a child of {$a->parent}.';
+    $string['questionidsoutofsync'] = 'Tried to set order of questions, but not all questions were included. Try reloading the page.';

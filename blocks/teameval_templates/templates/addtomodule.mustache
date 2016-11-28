@@ -1,0 +1,61 @@
+{{!
+        
+        @template block_teameval_templates/addtomodule
+
+}}
+<div class="teameval-templates-add-to-module">
+        {{#module}}
+        {{#str}} addquestionstothismodule, block_teameval_templates, {{name}} {{/str}}
+        {{/module}}
+        {{^module}}
+        {{#str}} addquestionstomodule, block_teameval_templates {{/str}}
+        <select id="module-list-{{uniqid}}">
+                {{#sections}}
+                <optgroup label="{{label}}">
+                        {{#modules}}
+                        <option value="{{cmid}}"{{#selected}} selected{{/selected}}>{{name}}</option>
+                        {{/modules}}
+                </optgroup>
+                {{/sections}}
+        </select>
+        {{/module}}
+        <button type="button" class="btn btn-default" id="add-to-module-{{uniqid}}" {{^module}}disabled{{/module}}>
+                {{#str}} addquestions, block_teameval_templates {{/str}}
+        </button>
+</div>
+{{#js}}{{#_notset}}<script>//{{/_notset}}
+require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
+
+        {{^module}}
+        $('#module-list-{{uniqid}}')[0].selectedIndex = -1;
+
+        $('#module-list-{{uniqid}}').change(function() {
+                $('#add-to-module-{{uniqid}}').prop('disabled', false);
+        });
+        {{/module}}
+
+        $('#add-to-module-{{uniqid}}').click(function() {
+                {{#module}}
+                var cmid = {{cmid}}
+                {{/module}}
+                {{^module}}
+                var cmid = $('#module-list-{{uniqid}}').val();
+                {{/module}}
+
+                var promises = Ajax.call([{
+                        methodname: 'block_teameval_templates_add_to_module',
+                        args: {
+                                from: {{id}},
+                                to: cmid
+                        }
+                }]);
+
+                promises[0].done(function(url) {
+                        window.location.href = url;
+                });
+
+                promises[0].fail(Notification.exception);
+        });
+
+});
+{{/js}}

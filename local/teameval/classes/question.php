@@ -2,6 +2,8 @@
 
 namespace local_teameval;
 
+use renderer_base;
+
 interface question {
     
     /**
@@ -43,7 +45,7 @@ interface question {
      * or if $locked is true. You should set the CSS class "incomplete" on your template's
      * direct ancestor if you do.
      */
-    public function submission_view($userid, $locked = false);
+    public function submission_view($locked = false);
     
     /**
      * The view that an editing user should see. Rendered with editing_view.mustache
@@ -65,6 +67,21 @@ interface question {
      * @return stdClass|array template data. @see templatable
      */
     public function editing_view();
+
+    /**
+     * Returns data to be passed to your JavaScript class along with the standard parameters.
+     * You might want to use this to include JSON-encodable versions of your submission and editing
+     * views' export_for_template data. Whatever you need to render your question in JavaScript,
+     * you should return from this function.
+     * 
+     * You SHOULD only return as much data as is readable by the user. Returning more data
+     * than necessary may provide users with attack vectors. Be sure to use 
+     * team_evaluation::check_capability as this will allow users to modify templates in their
+     * own user contexts.
+     * 
+     * @return mixed JSON-encodable data.
+     */
+    public function context_data(renderer_base $output, $locked = false);
 
     /**
      * Return the name of this teamevalquestion subplugin

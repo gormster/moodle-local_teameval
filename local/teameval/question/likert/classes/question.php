@@ -3,18 +3,22 @@
 namespace teamevalquestion_likert;
 
 use coding_exception;
+use stdClass;
+use renderer_base;
+use local_teameval\team_evaluation;
     
 class question implements \local_teameval\question {
     
     public $id;
     
     protected $teameval;
-    protected $title;
-    protected $description;
-    protected $minval;
-    protected $maxval;
+    protected $_title;
+    protected $_description;
+    protected $_minval;
+    protected $_maxval;
+    protected $_meanings;
 
-    public function __construct(\local_teameval\team_evaluation $teameval, $questionid = null) {
+    public function __construct(team_evaluation $teameval, $questionid = null) {
         global $DB;
 
         $this->id               = $questionid;
@@ -23,245 +27,56 @@ class question implements \local_teameval\question {
         if ($questionid > 0) {
             $record = $DB->get_record('teamevalquestion_likert', array("id" => $questionid));
 
-            $this->title            = $record->title;
-            $this->description      = $record->description;
-            $this->minval           = $record->minval;
-            $this->maxval           = $record->maxval;
-            $this->meanings         = json_decode($record->meanings);
+            $this->_title            = $record->title;
+            $this->_description      = $record->description;
+            $this->_minval           = $record->minval;
+            $this->_maxval           = $record->maxval;
+            $this->_meanings         = json_decode($record->meanings);
         }
     }
     
-    public function submission_view($userid, $locked = false) {
-        global $DB;
-
-        // what I need to end up with:
-
-        // context[id, title, description, users[ord, remaining, name], options[value, meaning, users[userid, name, checked]]]
-
-        $context = ["id" => $this->id, "title" => $this->title, "description" => $this->description, "self" => $this->teameval->get_settings()->self];
-
-        $options = [];
-        $totalstrlen = 0;
-        $maxstrlen = 0;
-        $maxwordlen = 0;
-
-        for ($i=$this->minval; $i <= $this->maxval; $i++) { 
-            $o = ["value" => $i];
-            if (isset($this->meanings->$i)) {
-                $meaning = $this->meanings->$i;
-                $o["meaning"] = $meaning;
-                $totalstrlen += strlen($meaning);
-                $maxstrlen = max($maxstrlen, strlen($meaning));
-                $longestword = array_reduce(str_word_count($meaning, 1), function($v, $p) {
-                    return strlen($v) > strlen($p) ? $v : $p;
-                });
-                $maxwordlen = max($maxwordlen, strlen($longestword));
-            }
-            $options[] = $o;
+    public function __get($name) {
+        if (in_array($name, ["title", "description", "minval", "maxval", "meanings"])) {
+            $priv = "_$name";
+            return $this->$priv;
         }
+        throw new coding_exception("Bad access ($name)");
+    }
 
-        $grid = true;
-
-        if ($totalstrlen > 150) {
-            $grid = false;
-        } else if ($maxstrlen > ((12 - count($options)) * 6) + 15) {
-            $grid = false;
-        } else if ($maxwordlen > ((12 - count($options)) * 2) + 3) {
-            $grid = false;
-        }
-
-        $context['waterfall'] = !$grid;
-        $context['grid'] = $grid;
-
-        // if the user can respond to this teameval
-        if (has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), $userid, false)) {
-            // get any response this user has given already
-            $response = new response($this->teameval, $this, $userid);
-            $marks = $response->raw_marks();
-            
-            $members = $this->teameval->teammates($userid);
-
-            $ord = 0;
-
-            $headers = [];
-            $previous = [];
-
-            $users = [];
-
-            foreach ($members as $user) {
-                $opts = [];
-                $ord++;
-
-                $fullname = $user->id == $userid ? get_string('yourself', 'local_teameval') : fullname($user);
-
-                $headers[] = [
-                    "ord" => $ord,
-                    "remaining" => count($members) - $ord + 1,
-                    "name" => $fullname,
-                    "previous" => $previous
-                ];
-
-                $previous[] = $fullname;
-
-                // set user options for grid format
-
-                foreach($options as $o) {
-                    if (isset($marks[$user->id])) {
-                        $mark = $marks[$user->id];
-                        if ($o['value'] == $mark) { $o['checked'] = true; }
-                    }
-                    $opts[] = $o;
-                }
-
-                $c = [
-                    "name" => fullname($user),
-                    "userid" => $user->id,
-                    "options" => $opts
-                ];
-
-                if ($user->id == $userid) {
-                    $c['self'] = true;
-                    $c['name'] = get_string('yourself', 'local_teameval');
-                }
-
-                $users[] = $c;
-            }
-
-            $context['headers'] = $headers;
-            $context['users'] = $users;
-
-            $opts = [];
-            foreach($options as $o) {
-                
-                $users = [];
-                foreach($members as $markeduser) {
-                    $u = [
-                        "userid" => $markeduser->id,
-                        "name" => fullname($markeduser)
-                    ];
-                    if ($markeduser->id == $userid) {
-                        $u["name"] = get_string('yourself', 'local_teameval');
-                    }
-
-                    if (isset($marks[$markeduser->id])) {
-                        $mark = $marks[$markeduser->id];
-                        $u['checked'] = ($o['value'] == $mark);
-                    }    
-                    $users[] = $u;
-                }
-                $o['users'] = $users;
-
-                $opts[] = $o;
-            }
-
-            $context['options'] = $opts;
-            $context['optionwidth'] = 100 / count($opts);
-
-            $context['locked'] = $locked;
-            if ($locked) {
-                $context['incomplete'] = !$response->marks_given();
-            }
-
-
-        } else {
-            $context['demo'] = true;
-
-            $opts = [];
-
-            if ($this->teameval->get_settings()->self) {
-                $context['headers'] = [
-                    [
-                        "ord" => 1,
-                        "remaining" => 2,
-                        "name" => "Yourself",
-                        "previous" => []
-                    ],
-                    [
-                        "ord" => 2,
-                        "remaining" => 1,
-                        "name" => "Example user",
-                        "previous" => ["Yourself"]
-                    ]
-                ];
-
-                foreach ($options as $o) {
-                $o["users"] = [
-                    [
-                        "name" => "Yourself",
-                        "userid" => $userid,
-                        "checked" => false
-                    ],
-                    [
-                        "name" => "Example user",
-                        "userid" => 0,
-                        "checked" => false
-                    ]
-
-                ];
-                $opts[] = $o;
-
-                $yourself = ["name" => "Yourself", "userid" => -1];
-                $user = ["name" => "Example user", "userid" => 0];
-                foreach ($options as $o) {
-                    $yourself["options"][] = ["value" => $o['value'], "checked" => false];
-                    $user["options"][] = ["value" => $o['value'], "checked" => false];
-                }
-                $context['users'] = [$yourself, $user];
-            }
-
-            } else {
-                $context['headers'] = [
-                    [
-                        "ord" => 1,
-                        "remaining" => 1,
-                        "name" => "Example user",
-                        "previous" => []
-                    ]
-                ];
-
-                $o["users"] = [
-                    [
-                        "name" => "Example user",
-                        "userid" => 0,
-                        "checked" => false
-                    ]
-                ];
-
-                $user = ["name" => "Example user", "userid" => 0];
-                foreach ($options as $o) {
-                    $user["options"][] = ["value" => $o['value'], "checked" => false];
-                }
-                $context['users'] = [$user];
-            }
-            
-            $context['options'] = $opts;
-            $context['optionwidth'] = 100 / count($opts);
-            
-
-        }
-
-        return $context;
+    public function submission_view($locked = false) {
+        return new output\submission_view($this, $this->teameval, $locked);
     }
     
     public function editing_view() {
-        $context = ["id" => $this->id, "title" => $this->title, "description" => $this->description, "minval" => $this->minval, "maxval" => $this->maxval];
+        return new output\editing_view($this, $this->any_response_submitted());
+    }
 
-        $meanings = [];
-        for ($i=$this->minval; $i <= $this->maxval; $i++) { 
-            $o = ["value" => $i];
-            if (isset($this->meanings->$i)) {
-                $o["meaning"] = $this->meanings->$i;
-            }
-            $meanings[] = $o;
-        }
+    public function edit_form_data() {
+        $data = new stdClass;
 
-        $context['meanings'] = $meanings;
+        $data->id = $this->id;
+        $data->teameval = $this->teameval->id;
+        $data->title = $this->title;
+        $data->description = ['text' => $this->description, 'format' => FORMAT_HTML];
+        $data->range = ['min' => $this->minval, 'max' => $this->maxval];
+        $data->meanings = $this->meanings;
 
-        if ($this->any_response_submitted()) {
-            $context['locked'] = true;
+        return $data;
+    }
+
+    public function context_data(renderer_base $output, $locked = false) {
+        $context = new stdClass;
+
+        if (team_evaluation::check_capability($this->teameval, ['local/teameval:createquestionnaire'])) {
+            $context->editingcontext = $this->edit_form_data();
+            $context->editinglocked = $this->any_response_submitted();
+            $context->submissioncontext = $this->submission_view($locked)->export_for_template($output);
+        } else if (team_evaluation::check_capability($this->teameval, ['local/teameval:createquestionnaire'], ['doanything' => false])) {
+            $context->submissioncontext = $this->submission_view($locked)->export_for_template($output);
         }
 
         return $context;
+        
     }
 
     public function any_response_submitted() {

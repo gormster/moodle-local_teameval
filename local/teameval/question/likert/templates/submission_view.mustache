@@ -206,7 +206,7 @@ Example context (json): {
 
 }}<div id="question-content-{{uniqid}}" class="teamevalquestion-likert-question-submission">
     <h3>{{title}}</h3>
-    {{description}}
+    {{{description}}}
 
     {{#grid}}
     <table class="responses grid{{#self}} self{{/self}}">
@@ -284,67 +284,10 @@ Example context (json): {
     <div class="incomplete-indicator">{{#str}} incompleteadvice, local_teameval {{/str}}</div>
 </div>
 {{#js}}{{#_notset}}<script>{{/_notset}}
-require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
-    var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
-
-    {{^locked}}
-    function checkComplete() {
-        var userids = [{{#users}}{{userid}},{{/users}}];
-
-        var markedUsers = questionContainer.find('input:radio:checked').map(function() { return $(this).data('touser'); }).get();
-
-        var missingUsers = userids.filter(function(v) { return markedUsers.indexOf(v) == -1; });
-
-        if (missingUsers.length > 0) {
-            questionContainer.parent().addClass('incomplete');
-        } else {
-            questionContainer.parent().removeClass('incomplete');
-        }
-
-        return (missingUsers.length > 0);
-    }
-    {{/locked}}
-
+require(['jquery'], function($) {
     {{#incomplete}}
+    var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
     questionContainer.parent().addClass('incomplete');
     {{/incomplete}}
-
-    questionContainer.on("delete", function () {
-        var promises = ajax.call([{
-            methodname: 'teamevalquestion_likert_delete_question',
-            args: {
-                teamevalid: {{_id}},
-                id: {{id}}
-            }
-        }]);
-
-        return promises[0];
-    });
-
-    questionContainer.on("submit", function () {
-        var marks = [];
-        $('#question-content-{{uniqid}} .responses tbody input[type="radio"]:checked').each(function(v, k) {
-            var toUser = $(this).data('touser');
-            var m = {};
-            m.touser = toUser;
-            m.value = this.value;
-            marks.push(m);
-        });
-
-        var promises = ajax.call([{
-            methodname: 'teamevalquestion_likert_submit_response',
-            args: {
-                teamevalid: {{_id}},
-                id: {{id}},
-                marks: marks
-            }
-        }]);
-
-        var incomplete = checkComplete();
-
-        return promises[0].then(function() {
-            return {'incomplete': incomplete};
-        });
-    });
 });
 {{/js}}

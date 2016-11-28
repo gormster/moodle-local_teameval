@@ -1,0 +1,29 @@
+<div class="teameval-templates-delete-button">
+<button class="btn btn-danger" id="delete-button-{{uniqid}}">{{#str}} deletetemplate, block_teameval_templates{{/str}}</button>
+</div>
+{{#js}}
+require(['jquery', 'core/notification', 'core/ajax'], function($, Notification, Ajax) {
+        
+        $('#delete-button-{{uniqid}}').click(function() {
+                Notification.confirm("{{#str}} confirmdeletetitle, block_teameval_templates {{/str}}", 
+                "{{#str}} confirmdeletequestion, block_teameval_templates {{/str}}",
+                "{{#str}} delete, core {{/str}}",
+                "{{#str}} cancel, core {{/str}}",
+                function() {
+                        var promises = Ajax.call([{
+                                methodname: 'block_teameval_templates_delete_template',
+                                args: {
+                                        id: {{templateid}}
+                                }
+                        }]);
+
+                        promises[0].done(function() {
+                                window.location.href = "{{contexturl}}";
+                        });
+
+                        promises[0].fail(Notification.exception);
+                })
+        });
+
+});
+{{/js}}

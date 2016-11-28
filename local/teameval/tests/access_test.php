@@ -33,6 +33,8 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $this->course = $this->getDataGenerator()->create_course();
 
+        team_evaluation::_clear_groups_members_cache();
+
         // we use assign because it's one of the default implementers
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
         $this->assign = $generator->create_instance(array('course'=>$this->course->id, 'teamsubmission' => true));
@@ -94,6 +96,179 @@ class local_teameval_access_testcase extends advanced_testcase {
             ->willReturn(['mock' => mock_question::mock_question_plugininfo($this)]);
 
     }
+
+    public function test_guard_capability() {
+
+        $this->mock_teameval();
+
+        $contextid = context_module::instance($this->assign->cmid)->id;
+
+        $this->setUser($this->teacher);
+        $context = team_evaluation::guard_capability($this->teameval, ['local/teameval:createquestionnaire']);
+
+        $this->assertEquals($context->id, $contextid);
+
+        $this->setUser($this->teacher);
+        $context = team_evaluation::guard_capability($this->teameval->id, ['local/teameval:createquestionnaire']);
+
+        $this->assertEquals($context->id, $contextid);
+
+    }
+
+    public function test_check_capability() {
+
+        $this->mock_teameval();
+
+        $this->setUser($this->teacher);
+        $result = team_evaluation::check_capability($this->teameval, ['local/teameval:createquestionnaire']);
+
+        $this->assertNotEmpty($result);
+
+        $result = team_evaluation::check_capability($this->teameval, ['local/teameval:submitquestionnaire']);
+
+        $this->assertEmpty($result);
+
+    }
+
+    public function test_guard_capability_basic_1() {
+
+        $this->mock_teameval();
+
+        $this->setUser($this->teacher);
+
+        $this->setExpectedException('required_capability_exception');
+        team_evaluation::guard_capability($this->teameval, ['local/teameval:submitquestionnaire']);
+
+    }
+
+    public function test_guard_capability_basic_2() {
+
+        $this->mock_teameval();
+
+        $this->setUser(current($this->students));
+
+        $this->setExpectedException('required_capability_exception');
+        team_evaluation::guard_capability($this->teameval, ['local/teameval:createquestionnaire']);
+
+    }
+
+    public function test_guard_capability_do_anything() {
+
+        $this->mock_teameval();
+
+        $contextid = context_module::instance($this->assign->cmid)->id;
+
+        $this->setAdminUser();
+        $context = team_evaluation::guard_capability($this->teameval, ['local/teameval:submitquestionnaire']);
+
+        $this->assertEquals($context->id, $contextid);
+
+        $this->setExpectedException('required_capability_exception');
+
+        $context = team_evaluation::guard_capability($this->teameval, ['local/teameval:submitquestionnaire'], ['doanything' => false]);
+
+        // Fails with exception
+
+    }
+
+    public function test_guard_capability_must_exist_1() {
+        $this->mock_teameval();
+
+        $contextid = context_module::instance($this->assign->cmid)->id;
+
+        $this->setUser($this->teacher);
+
+        $context = team_evaluation::guard_capability(['cmid' => $this->assign->cmid], ['local/teameval:createquestionnaire'], ['must_exist' => true]);
+
+        $this->assertEquals($context->id, $contextid);
+
+        // create a new assign that doesn't have a teameval associated with it
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
+        $assign2 = $generator->create_instance(array('course'=>$this->course->id, 'teamsubmission' => true));
+        $contextid2 = context_module::instance($assign2->cmid)->id;
+
+        $context = team_evaluation::guard_capability(['cmid' => $assign2->cmid], ['local/teameval:createquestionnaire'], ['must_exist' => false]);
+
+        $this->assertEquals($context->id, $contextid2);
+
+        $this->setExpectedException('invalid_parameter_exception');
+
+        $context = team_evaluation::guard_capability(['cmid' => $assign2->cmid], ['local/teameval:createquestionnaire'], ['must_exist' => true]);
+
+        // Fails with exception
+
+    }
+
+    public function test_guard_capability_must_exist_2() {
+        $this->mock_teameval();
+
+        $this->setUser($this->teacher);
+
+        $this->setExpectedException('invalid_parameter_exception');
+
+        $context = team_evaluation::guard_capability(['id' => $this->teameval->id + 1], ['local/teameval:createquestionnaire'], ['must_exist' => true]);
+
+        // Fails with exception
+
+    }
+
+    public function test_guard_capability_must_exist_3() {
+        $this->mock_teameval();
+
+        $this->setUser($this->teacher);
+
+        $this->setExpectedException('coding_exception');
+
+        $context = team_evaluation::guard_capability(['plumbus' => $this->teameval->id], ['local/teameval:createquestionnaire'], ['must_exist' => true]);
+    }
+
+    public function test_guard_capability_child_context() {
+        $this->mock_teameval();
+
+        $coursecontext = context_course::instance($this->course->id);
+
+        $template = team_evaluation::new_with_contextid($coursecontext->id);
+
+        $this->setUser($this->teacher);
+
+        $context = team_evaluation::guard_capability($template, ['local/teameval:createquestionnaire'], ['child_context' => $this->teameval->get_context()]);
+
+        $this->assertEquals($context->id, $this->teameval->get_context()->id);
+
+        $context = team_evaluation::guard_capability(['contextid' => $coursecontext->id], ['local/teameval:createquestionnaire'], ['child_context' => $this->teameval->get_context()]);
+
+        $this->assertEquals($context->id, $this->teameval->get_context()->id);        
+
+        // now create a second course, to test the fail condition
+        
+        $course2 = $this->getDataGenerator()->create_course();
+        $course2context = context_course::instance($course2->id);
+        $template2 = team_evaluation::new_with_contextid($course2context->id);
+
+        $this->setExpectedException('required_capability_exception');
+        $context = team_evaluation::guard_capability($template2, ['local/teameval:createquestionnaire'], ['child_context' => $this->teameval->get_context()]);
+
+    }
+
+    public function test_guard_capability_dashboard_context() {
+
+        $user = current($this->students);
+
+        $this->setUser($user->id);
+
+        $usercontext = context_user::instance($user->id);
+
+        $context = team_evaluation::guard_capability($usercontext, ['local/teameval:submitquestionnaire']);
+
+        $this->assertEquals($context->id, $usercontext->id);
+
+        $this->setUser(next($this->students));
+
+        $this->setExpectedException('required_capability_exception');
+        
+        team_evaluation::guard_capability($usercontext, ['local/teameval:submitquestionnaire']);
+    }
+    
 
     public function test_should_update_question() {
         global $USER;
@@ -182,6 +357,8 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         // make sure that stub worked
         $this->assertTrue($this->teameval->questionnaire_locked());
+
+        $this->setAdminUser();
 
         // should always fail with a locked questionnaire
         $tx = $this->teameval->should_delete_question('mock', 1, $USER->id);

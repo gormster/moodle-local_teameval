@@ -2,6 +2,7 @@
 
 use local_teameval\team_evaluation;
 use local_teameval\question_info;
+use local_teameval\polymorph_transaction;
 
 require_once(dirname(__FILE__) . '/mocks/mock_question.php');
 
@@ -57,7 +58,7 @@ class local_teameval_questions_testcase extends advanced_testcase {
     }
 
     /**
-     * @covers team_evaluation::get_questions
+     * @covers local_teameval\team_evaluation::get_questions
      */
     public function test_get_questions() {
 
@@ -89,8 +90,8 @@ class local_teameval_questions_testcase extends advanced_testcase {
 
     /**
      * Even though this covered by questionnaire_set_order, changing the ordinal is about the only thing you can do with update_question
-     * @covers team_evaluation::should_update_question
-     * @covers team_evaluation::update_question
+     * @covers local_teameval\team_evaluation::should_update_question
+     * @covers local_teameval\team_evaluation::update_question
      */
     public function test_update_question() {
         global $USER;
@@ -115,7 +116,37 @@ class local_teameval_questions_testcase extends advanced_testcase {
     }
 
     /**
-     * @covers questionnaire_set_order
+     * @expectedException coding_exception
+     * @expectedExceptionMessage type of transaction
+     */
+    public function test_update_question_fail() {
+        global $USER;
+
+        $this->add_questions(1);
+
+        $question = current($this->questions);
+
+        $tx = $this->teameval->should_delete_question('mock', $question->id, $USER->id);
+
+        $this->teameval->update_question($tx, 0);
+    }
+
+    /**
+     * @expectedException coding_exception
+     * @expectedExceptionMessage type of transaction
+     */
+    public function test_update_question_fail_2() {
+        $this->add_questions(1);
+
+        $question = current($this->questions);
+
+        $tx = new polymorph_transaction(null, 'plumbus', 'hizzard', $question->id, SQL_QUERY_UPDATE);
+
+        $this->teameval->update_question($tx, 0);
+    }
+
+    /**
+     * @covers local_teameval\team_evaluation::questionnaire_set_order
      */
     public function test_questionnaire_set_order() {
         global $USER;
@@ -138,10 +169,42 @@ class local_teameval_questions_testcase extends advanced_testcase {
     }
 
     /**
-     * @covers team_evaluation::num_questions
-     * @covers team_evaluation::should_delete_question
-     * @covers team_evaluation::delete_question
-     * @covers team_evaluation::last_ordinal
+     * @expectedException moodle_exception
+     */
+    public function test_questionnaire_set_order_fail_1() {
+        global $USER;
+
+        $this->add_questions(5);
+
+        $reorder = [5, 2, 1, 3]; 
+        $setorder = array_map(function($i) {
+            return ['type' => 'mock', 'id' => $i];
+        }, $reorder);
+
+        $this->teameval->questionnaire_set_order($setorder);
+    }
+    
+    /**
+     * @expectedException moodle_exception
+     */
+    public function test_questionnaire_set_order_fail_2() {
+        global $USER;
+
+        $this->add_questions(5);
+
+        $reorder = [6, 2, 1, 3, 4]; 
+        $setorder = array_map(function($i) {
+            return ['type' => 'mock', 'id' => $i];
+        }, $reorder);
+
+        $this->teameval->questionnaire_set_order($setorder);
+    }
+
+    /**
+     * @covers local_teameval\team_evaluation::num_questions
+     * @covers local_teameval\team_evaluation::should_delete_question
+     * @covers local_teameval\team_evaluation::delete_question
+     * @covers local_teameval\team_evaluation::last_ordinal
      */
     public function test_delete_questions() {
         global $USER;
@@ -169,6 +232,36 @@ class local_teameval_questions_testcase extends advanced_testcase {
         // this is liable to break, but question_info doesn't have ordinal information
         $this->assertEquals(2, $lastordinal);
 
+    }
+
+    /**
+     * @expectedException coding_exception
+     * @expectedExceptionMessage type of transaction
+     */
+    public function test_delete_question_fail() {
+        global $USER;
+
+        $this->add_questions(1);
+
+        $question = current($this->questions);
+
+        $tx = $this->teameval->should_update_question('mock', $question->id, $USER->id);
+
+        $this->teameval->delete_question($tx);
+    }
+
+    /**
+     * @expectedException coding_exception
+     * @expectedExceptionMessage type of transaction
+     */
+    public function test_delete_question_fail_2() {
+        $this->add_questions(1);
+
+        $question = current($this->questions);
+
+        $tx = new polymorph_transaction(null, 'plumbus', 'hizzard', $question->id, SQL_QUERY_DELETE);
+
+        $this->teameval->delete_question($tx, 0);
     }
 
 

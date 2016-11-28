@@ -4,6 +4,7 @@ namespace local_teameval\output;
 
 use plugin_renderer_base;
 use local_teameval\forms;
+use local_teameval\team_evaluation;
 use stdClass;
 use moodle_url;
 use file_picker;

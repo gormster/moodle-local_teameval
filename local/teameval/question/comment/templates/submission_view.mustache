@@ -1,6 +1,6 @@
 <div class="teamevalquestion-comment-container" id="teamevalquestion-comment-{{uniqid}}">
 <h3>{{title}}</h3>
-<div class="description">{{description}}</div>
+<div class="description">{{{description}}}</div>
 {{#optional}}<div class="optional-advice">{{#str}} optionaladvice, teamevalquestion_comment {{/str}}</div>{{/optional}}
 <table class="comments">
 {{#users}}
@@ -26,81 +26,12 @@
 </div>
 {{#js}}
 {{#_notset}}<script>{{/_notset}}
-
-require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
-
-    
-
+{{#incomplete}}
+require(['jquery'], function($) {
     var questionContainer = $('#teamevalquestion-comment-{{uniqid}}').closest('.question-container');
-    var thisQuestion = $('#teamevalquestion-comment-{{uniqid}}');
-
-    {{^locked}}{{^optional}}
-    function checkComplete() {
-        var incomplete = thisQuestion.find('textarea').filter(function() {
-            return $(this).val().trim().length == 0;
-        });
-
-        if (incomplete.length > 0) {
-            questionContainer.parent().addClass('incomplete');
-        } else {
-            questionContainer.parent().removeClass('incomplete');
-        }
-
-        return incomplete.length > 0;
-    }
-    {{/optional}}{{/locked}}
-
-    {{#incomplete}}
+    
     questionContainer.parent().addClass('incomplete');
-    {{/incomplete}}
-
-    {{#_submission}}
-    questionContainer.on('submit', function () {
-
-        var comments = [];
-        thisQuestion.find('.comments textarea').each(function(v, k) {
-            var toUser = $(this).data('touser');
-            var m = {};
-            m.touser = toUser;
-            m.comment = $(this).val();
-            comments.push(m);
-        });
-
-        var promises = ajax.call([{
-            methodname: 'teamevalquestion_comment_submit_response',
-            args: {
-                teamevalid: {{_id}},
-                id: {{id}},
-                comments: comments
-            }
-        }]);
-
-        var incomplete = false;
-        {{^optional}}
-        incomplete = checkComplete();
-        {{/optional}}
-
-        return promises[0].then(function() {
-            return {'incomplete': incomplete};
-        });
-
-    });
-    {{/_submission}}
-
-    {{#_editing}}
-    questionContainer.on("delete", function () {
-        var promises = ajax.call([{
-            methodname: 'teamevalquestion_comment_delete_question',
-            args: {
-                teamevalid: {{_id}},
-                id: {{id}}
-            }
-        }]);
-
-        return promises[0];
-    });
-    {{/_editing}}
-
+    
 });
-
+{{/incomplete}}
 {{/js}}

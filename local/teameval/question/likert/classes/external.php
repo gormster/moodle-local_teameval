@@ -17,117 +17,79 @@ use moodle_exception;
 
 use local_teameval;
 use local_teameval\team_evaluation;
+use local_teameval\traits;
 
 class external extends external_api {
 
     /* update_question */
 
-    public static function update_question_parameters() {
-        return new external_function_parameters([
-            'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
-            'ordinal' => new external_value(PARAM_INT, 'ordinal of question'),
-            'id' => new external_value(PARAM_INT, 'id of question', VALUE_DEFAULT, 0),
-            'title' => new external_value(PARAM_TEXT, 'title of question'),
-            'description' => new external_value(PARAM_RAW, 'description of question'),
-            'minval' => new external_value(PARAM_INT, 'minimum value'),
-            'maxval' => new external_value(PARAM_INT, 'maximum value'),
-            'meanings' => new external_multiple_structure(
-                new external_single_structure([
-                    'value' => new external_value(PARAM_INT, 'value meaning represents'),
-                    'meaning' => new external_value(PARAM_TEXT, 'meaning of value')
-                ])
-            )
-        ]);
+    // Since we need to modify the return value, we import this function aliased
+    use traits\question\update_from_form {
+        update_question as update_question_internal;
     }
 
-    public static function update_question_returns() {
-        return new external_single_structure([
-            "id" => new external_value(PARAM_INT, 'id of question'),
-            "submissionContext" => new external_value(PARAM_RAW, 'json encoded submission context')
-            ]);
+    protected static function plugin_name() {
+        return 'likert';
     }
 
-    public static function update_question($teamevalid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
-        global $DB, $USER;
+    protected static function form_class() {
+        return '\teamevalquestion_likert\forms\settings_form';
+    }
 
-        team_evaluation::guard_capability($teamevalid, ['local/teameval:createquestionnaire']);
-
-        $teameval = new team_evaluation($teamevalid);
-        $transaction = $teameval->should_update_question("likert", $id, $USER->id);
-
-        if ($transaction == null) {
-            throw new moodle_exception("cannotupdatequestion", "local_teameval");
-        }
-
+    protected static function update_record($record, $data, $teameval) {
+        $id = $data->id;
         $any_response_submitted = false;
         if ($id > 0) {
             $question = new question($teameval, $id);
             $any_response_submitted = $question->any_response_submitted();
         }
 
-        //get or create the record
-        $record = ($id > 0) ? $DB->get_record('teamevalquestion_likert', array('id' => $id)) : new stdClass;
-        
         //update the values
-        $record->title = $title;
-        $record->description = $description;
+        $record->title = $data->title;
+        $record->description = $data->description['text'];
         if ($any_response_submitted == false) {
-            $record->minval = min(max(0, $minval), 1); //between 0 and 1
-            $record->maxval = min(max(3, $maxval), 10); //between 3 and 10
+            $record->minval = min(max(0, $data->range['min']), 1); //between 0 and 1
+            $record->maxval = min(max(3, $data->range['max']), 10); //between 3 and 10
         }
 
         $record->meanings = new stdClass;
-        foreach ($meanings as $m) {
-            $val = $m['value'];
-            $record->meanings->$val = $m['meaning'];
+        foreach ($data->meanings as $k => $m) {
+            $record->meanings->$k = $m;
         }
 
         $record->meanings = json_encode($record->meanings);
+    }
 
-        //save the record back to the DB
-        if ($id > 0) {
-            $DB->update_record('teamevalquestion_likert', $record);
-        } else {
-            $transaction->id = $DB->insert_record('teamevalquestion_likert', $record);
-        }
-        
-        //finally tell the teameval we're done
-        $teameval->update_question($transaction, $ordinal);
+    public static function update_question_returns() {
+        return new external_single_structure([
+            "id" => new external_value(PARAM_INT, 'id of question'),
+            "submissionContext" => new external_value(PARAM_RAW, 'json encoded submission context')
+        ]);
+    }
 
-        $question = new question($teameval, $transaction->id);
+    public static function update_question($teamevalid, $formdata) {
+        global $DB, $USER, $PAGE;
 
-        return ["id" => $id, "submissionContext" => json_encode($question->submission_view($USER->id))];
+        // Call the function imported from the update_from_form trait
+        $id = static::update_question_internal($teamevalid, $formdata);
+
+        $teameval = new team_evaluation($teamevalid);
+
+        $question = new question($teameval, $id);
+
+        $output = $PAGE->get_renderer('teamevalquestion_likert');
+        return ["id" => $id, "submissionContext" => json_encode($question->submission_view()->export_for_template($output))];
 
     }
 
     /* delete_question */
 
-    public static function delete_question_parameters() {
-        return new external_function_parameters([
-            'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
-            'id' => new external_value(PARAM_INT, 'id of question')
-        ]);
-    }
+    use traits\question\simple_delete;
 
-    public static function delete_question_returns() {
-        return null;
-    }
-
-    public static function delete_question($teamevalid, $id) {
-        global $DB, $USER;
-
-        team_evaluation::guard_capability($teamevalid, ['local/teameval:createquestionnaire']);
-
-        $teameval = new team_evaluation($teamevalid);
-
-        $transaction = $teameval->should_delete_question("likert", $id, $USER->id);
-        if ($transaction == null) {
-            throw new moodle_exception("cannotupdatequestion", "local_teameval");
-        }
-
+    public static function delete_records($id) {
+        global $DB;
         $DB->delete_records('teamevalquestion_likert', array('id' => $id));
-
-        $teameval->delete_question($transaction);
+        $DB->delete_records('teamevalquestion_likert_resp', array('questionid' => $id));
     }
 
     /* submit_response */

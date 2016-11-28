@@ -421,9 +421,13 @@ li.local-teameval-template-search-result .subtitle {
     stroke-width: 1;
 }
 
+
+/* 
+this is stupidly generic. where am i using it?
+
 .right {
     float: right;
-}
+}*/
 
 .noncompletion-advice {
     text-align: center;

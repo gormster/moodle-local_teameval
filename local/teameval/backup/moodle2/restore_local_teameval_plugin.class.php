@@ -1,5 +1,7 @@
 <?php
 
+defined('MOODLE_INTERNAL') || die();
+
 class restore_local_teameval_plugin extends restore_local_plugin {
 
     // This is necessary because add_subplugin_structure is declared protected.

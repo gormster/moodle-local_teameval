@@ -1,0 +1,60 @@
+{{!
+
+@template teamevalquestion_split100/submission_view
+
+Example context (json): {
+    "name": "Example question",
+    "description": "<p>This is an <strong>example question.</strong></p>",
+    "users": [
+        {
+            "name": "Example user 1",
+            "id": 1,
+            "rounded": 20,
+            "width": 22,
+            "left": 0,
+            "first": true
+        },
+        {
+            "name": "Example user 2",
+            "id": 2,
+            "rounded": 30,
+            "width": 30.5,
+            "left": 22,
+        },
+        {
+            "name": "Example user 3",
+            "id": 3,
+            "rounded": 50,
+            "width": 47.5,
+            "left": 52.5
+        }
+    ]
+}
+
+}}
+<div class="teamevalquestion-split100" id="teamevalquestion-split100-{{uniqid}}">
+    <h3>{{name}}</h3>
+    {{{description}}}
+    <div class="hundred">
+    {{#users}}
+        {{^first}}{{#locked}}
+            <div class="divider" style="left: {{left}}%"></div>
+        {{/locked}}{{^locked}}
+            <div class="handle" style="left: {{left}}%"></div>
+        {{/locked}}{{/first}}
+        <div class="split{{#self}} self{{/self}}" style="width: {{width}}%; left: {{left}}%" data-user-id="{{id}}"><span class="split-label">
+            <span class="name">{{#pic}}{{{pic}}} {{/pic}}{{name}}</span>
+            <span class="value">{{rounded}}%</span>
+        </span></div>
+    {{/users}}
+    </div>
+    <div class="overflows">
+    {{#users}}
+        
+        <div class="name{{#self}} self{{/self}}">
+        <div class="middlehook"></div><div class="left hook"></div><span>{{name}}</span><div class="right hook"></div>
+        </div>
+        
+    {{/users}}
+    </div>
+</div>

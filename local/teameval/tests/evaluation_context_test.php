@@ -4,6 +4,8 @@ use local_teameval\team_evaluation;
 use local_teameval\evaluation_context;
 use local_teameval\evaluator;
 
+require_once('mocks/mock_evaluator.php');
+
 class local_teameval_evaluation_context_testcase extends advanced_testcase {
 
     private $course;
@@ -149,21 +151,14 @@ class local_teameval_evaluation_context_testcase extends advanced_testcase {
 
     public function test_update_grades() {
 
-        // This is kind of complicated, because it involves mocking the evaluator, as well
         $mock_scores = [1.53,1.23,1.65,0.67,0.21,0.34,1.42,0.46,0.75,1.61,1.60,1.00,0.83,0.93,0.64];
         $scores = [];
         foreach(array_map(null, $this->users, $mock_scores) as list($user, $score)) {
             $scores[$user->id] = $score;
         }
 
-        $evaluator = $this->getMock(evaluator::class, ['__construct', 'scores'], [$this->teameval, null]);
-        $evaluator->method('scores')
-            ->willReturn($scores);
-
-        $reflection = new ReflectionClass(team_evaluation::class);
-        $prop = $reflection->getProperty('evaluator');
-        $prop->setAccessible(true);
-        $prop->setValue($this->teameval, $evaluator);
+        $evaluator = mock_evaluator::install_mock($this->teameval);
+        $evaluator->scores = $scores;
 
         $mock_grades = [40, 60, 90];
         $grades = [];
@@ -194,5 +189,69 @@ class local_teameval_evaluation_context_testcase extends advanced_testcase {
         }
 
     }
+
+    public function test_default_imps() {
+
+        $ns = evaluation_context::plugin_namespace();
+
+        $this->assertEquals("local_teameval", $ns);
+
+        $component = evaluation_context::component_string();
+
+        $this->assertEquals("Team evaluation", $component);
+
+        $component = \mod_assign\evaluation_context::component_string();
+
+        $this->assertEquals("Assignments", $component);
+
+        $grade = $this->evalcontext->format_grade(12.3456);
+
+        $this->assertEquals('12.35', $grade);
+
+    }
+
+    /**
+     * Test failing call when a module does not support team evaluation
+     */
+    public function test_context_for_module_fail() {
+        
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_url');
+        $module = $generator->create_instance(array('course'=>$this->course->id));
+
+        $cm = get_fast_modinfo($this->course)->cms[$module->cmid];
+
+        $result = evaluation_context::context_for_module($cm, false);
+
+        $this->assertEmpty($result);
+
+        $this->setExpectedException('moodle_exception');
+
+        $result = evaluation_context::context_for_module($cm);        
+
+        // Fail with moodle_exception
+    }
+
+    /**
+     * Test getting team evaluation instance via context_for_module
+     */
+    public function test_get_teameval() {
+        $cm = get_fast_modinfo($this->course)->cms[$this->assign->cmid];
+
+        $evalcontext = evaluation_context::context_for_module($cm);
+
+        $teameval = $evalcontext->team_evaluation();
+
+        $this->assertEquals($this->teameval->id, $teameval->id);
+    }
+
+    /**
+     * TODO
+     * This is going to be pretty bloody difficult to mock up.
+     */
+    public function test_userdata_reset() {
+
+    }
+
+    
 
 }

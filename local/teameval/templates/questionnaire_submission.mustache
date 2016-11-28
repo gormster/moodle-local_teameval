@@ -1,3 +1,20 @@
+{{!
+    Brief aside about how questions work.
+
+    Question plugins have to be able to render their contents:
+        a) In both PHP and JavaScript
+        b) For both editing and submision views
+
+    The way we achieve this in PHP is by using the submission_view and editing_view renderables.
+    The way we achieve this in JavaScript is by using the submissionView and editingView functions
+    in the question's AMD module. For each question, there are three distinct objects:
+
+        * question: the DOM node representing the list item, containing all information about a question
+        * questionContainer: the DOM node representing the div, containing the parts of the 
+          question rendered by the plugin. Holds a reference to questionObject.
+        * questionObject: the object returned by initialising the AMD module, used to interact with
+          the question plugin from JavaScript. Holds a reference to questionContainer.
+}}
 <div class="local-teameval-questionnaire">
 {{#deadline}}
 <div class="deadline">{{#str}} deadline, local_teameval {{/str}}: <time>{{deadline}}</time></div>
@@ -29,11 +46,14 @@
 require(['jquery', 'local_teameval/submitquestion'], function($, SubmitQuestion) {
 
     {{#questions}}
+    require(['teamevalquestion_{{type}}/question'], function(QuestionClass) {
         var el = $('#teameval-{{type}}-question-{{questionid}}-{{uniqid}}');
-        el.data('questionid', {{questionid}});
         el.data('questiontype', '{{type}}');
-        el.data('submissioncontext', {{{submissioncontext}}});
-        {{#editingcontext}}el.data('editingcontext', {{{editingcontext}}}){{/editingcontext}};
+        el.data('questionid', {{questionid}});
+
+        var container = el.children('.question-container');
+        container.data('question', new QuestionClass(container, {{teamevalid}}, {{contextid}}, {{selfassessment}}, {{editing}}, {{questionid}}, {{{context}}}));
+    });
     {{/questions}}
 
     {{#submission}}

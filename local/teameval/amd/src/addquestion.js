@@ -15,6 +15,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
     var _id;
 
+    var _contextid;
+
     var _subplugins;
 
     var _self;
@@ -62,22 +64,35 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             $(document).one('click', function(evt) {
                 if ($(evt.target).closest('.local-teameval-question-dropdown').length > 0) {
                     var type = $(evt.target).closest('li').data('type');
-                    var question = _this.addQuestion(type);
-                    _this.editQuestion(question, true);
+                    _this.addQuestion(type).done(function(question) {
+                        _this.editQuestion(question, true);
+                    });
                 }
                 dropdown.remove();
             });
 
         },
 
-        addQuestion: function(type) {
+        addQuestion: function(type, questionID, context) {
             var question = $('<li class="local-teameval-question" />');
-            question.data('questiontype', type);
             var questionContainer = $('<div class="question-container" />');
             question.append(questionContainer);
             $('#local-teameval-questions').append(question);
             this.addEditingControls(question);
-            return question;
+
+            question.data('questiontype', type);
+            if (questionID) {
+                question.data('questionid', questionID);
+            }
+
+            var d = $.Deferred();
+            require(['teamevalquestion_'+type+'/question'], function(QuestionClass) {
+                var qObject = new QuestionClass(questionContainer, _id, _contextid, _self, true, questionID, context);
+                questionContainer.data("question", qObject);
+                d.resolve(question);
+            });
+
+            return d.promise();
         },
 
         addEditingControls: function(question) {
@@ -128,27 +143,15 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
         editQuestion: function(question, newquestion) {
 
-            var editingContext = question.data('editingcontext') || {};
-            var questionType = question.data('questiontype');
-
-            editingContext._id = _id;
-            editingContext._self = _self;
-
-            if (newquestion) {
-                editingContext._newquestion = true;	
-            }
-
             // hide the action bar
             question.find('.local-teameval-question-actions').hide();
+            var questionContainer = question.find('.question-container');
 
-            templates.render('teamevalquestion_'+questionType+'/editing_view', editingContext).done(function(html, js) {
+            var questionObject = questionContainer.data("question");
+            
+            questionObject.editingView().done(function() {
 
-                var questionContainer = question.find('.question-container');
                 question.addClass('editing');
-
-                //disable the events that are registered in submission_view
-                questionContainer.html(html).off();
-                templates.runTemplateJS(js);
                 question.find('.local-teameval-save-cancel-buttons').show();
 
             }).fail(function () {
@@ -164,12 +167,11 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             // todo: do save
 
             var questionContainer = question.find('.question-container');
+            var questionObject = questionContainer.data("question");
             var ordinal = question.index('.local-teameval-question');
-            var promise = questionContainer.triggerHandler("save", ordinal);
-            promise.done(function(questionID, submissionContext, editingContext) {
+            var promise = questionObject.save(ordinal);
+            promise.done(function(questionID) {
                 question.data('questionid', questionID);
-                question.data('editingcontext', editingContext);
-                question.data('submissioncontext', submissionContext);
                 this.showQuestion(question);
             }.bind(this));
             promise.fail(function() {
@@ -181,35 +183,31 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
         showQuestion: function(question) {
 
-            var submissionContext = question.data('submissioncontext') || {};
-            var questionType = question.data('questiontype');
+            var questionContainer = question.find('.question-container');
+            var questionObject = questionContainer.data('question');
 
-            submissionContext._id = _id;
-            submissionContext._editing = true;
-
-            templates.render('teamevalquestion_'+questionType+'/submission_view', submissionContext).done(function(html, js) {
+            questionObject.submissionView().done(function() {
 
                 question.removeClass('editing');
-                //disable the events that are registered in editing_view
-                question.find('.question-container').html(html).off();
+                
                 question.find('.local-teameval-save-cancel-buttons').hide();
                 question.find('.local-teameval-question-actions').show();
-
-                templates.runTemplateJS(js);
 
             }).fail(notification.exception);
 
         },
 
         deleteQuestion: function(question) {
+            var questionContainer = question.find('.question-container');
             if (question.data('questionid') === undefined) {
                 // just pull it out of the DOM
+                questionContainer.removeData('question');
                 question.remove();
             } else {
                 // actually delete it from the database
-                var questionContainer = question.find('.question-container');
-                
-                questionContainer.triggerHandler("delete").done(function() {
+                var questionObject = questionContainer.data('question');
+                questionObject.delete().done(function() {
+                    questionContainer.removeData('question');
                     question.remove();
                 }).fail(notification.exception);
             }
@@ -267,11 +265,10 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
         addQuestions: function(questions) {
             for (var i = 0; i < questions.length; i++) {
                 var qdata = questions[i];
-                var question = this.addQuestion(qdata.type);
-                question.data('questionid', qdata.questionid);
-                question.data('editingcontext', qdata.editingcontext);
-                question.data('submissioncontext', qdata.submissioncontext);
-                this.showQuestion(question);
+                this.addQuestion(qdata.type, qdata.questionid, JSON.parse(qdata.context))
+                .done(function(question) {
+                    this.showQuestion(question);
+                }.bind(this));
             }
         },
 
@@ -292,6 +289,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             // settings: id, self, locked, download, filepickerid, filepickeritemid, subplugins
 
             _id = options.id;
+            _contextid = options.contextid;
             _self = options.self;
             _locked = options.locked;
             _subplugins = options.subplugins;
@@ -399,13 +397,14 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
                             }
                         }]);
 
+
                         promises[0].done(function(questions) {
                             _this.initialised().done(function() {
                                 _this.addQuestions(questions);
                             });
                         });
 
-                        promises[0].fail(Notification.exception);
+                        promises[0].fail(notification.exception);
                     };
 
                     instance.show();

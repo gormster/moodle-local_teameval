@@ -2,6 +2,8 @@
 
 namespace local_teameval;
 
+use moodle_exception;
+
 abstract class evaluation_context {
 
     // cm_info
@@ -95,6 +97,7 @@ abstract class evaluation_context {
     /**
      * You can implement this function if you feel like you might need to give a specific reason why
      * one of the submitters can see the questionnaire.
+     * @codeCoverageIgnore
      */
     public function questionnaire_locked_hint($user) {
         return get_string('lockedhintvisible', 'local_teameval');
@@ -102,6 +105,8 @@ abstract class evaluation_context {
 
     /**
      * You can override this function to customise the appearance of Teameval feedback in the gradebook.
+     * TODO make this less awful (use a template)
+     * @codeCoverageIgnore
      */
     protected function format_feedback($feedbacks) {
         $o = '<h3>Team Evaluation</h3>';
@@ -164,10 +169,9 @@ abstract class evaluation_context {
         if (!function_exists($function)) {
             // throw something
             if ($throw) {
-                print_error("noevaluationcontext");
-            } else {
-                return null;
+                throw new moodle_exception("noevaluationcontext");
             }
+            return null;
         }
 
         return $function($cm);
@@ -197,6 +201,7 @@ abstract class evaluation_context {
 
     /**
      * Deprecated. Use team_evaluation() instead.
+     * @deprecated
      * @param int $userid 
      * @return bool
      */
@@ -210,6 +215,7 @@ abstract class evaluation_context {
 
     /**
      * Deprecated. Use team_evaluation() instead.
+     * @deprecated
      * @param int $userid 
      * @return float
      */
@@ -267,6 +273,11 @@ abstract class evaluation_context {
 
     // COURSE RESET
 
+    /**
+     * These are not tested for the fairly simply reason that testing them basically involves rewriting the functions.
+     * They don't involved complex logic, just presentation.
+     * @codeCoverageIgnore
+     */
     public static function reset_course_form_definition(&$mform) {
 
         $ns = static::plugin_namespace() . '_';
@@ -280,6 +291,9 @@ abstract class evaluation_context {
 
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function reset_course_form_defaults() {
         $ns = static::plugin_namespace() . '_';
         return [$ns.'reset_teameval_responses' => 1, $ns.'reset_teameval_questionnaire' => 0];
@@ -318,7 +332,6 @@ abstract class evaluation_context {
         return $status;
 
     }
-
 
 
 }

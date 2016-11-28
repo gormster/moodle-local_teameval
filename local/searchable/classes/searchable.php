@@ -7,7 +7,7 @@ use cache;
 
 class searchable {
 
-    private static function get_tag_id($tag) {
+    private static function get_tag_id($tag, $create = true) {
         global $DB;
 
         $tagcache = cache::make('local_searchable', 'tags');
@@ -15,13 +15,15 @@ class searchable {
 
         if ($id === false) {
             $tagrecord = $DB->get_record('searchable_tags', ['tag' => $tag]);
-            if ($tagrecord == null) {
+            if (($tagrecord == null) && ($create == true)) {
                 $tagrecord = new stdClass;
                 $tagrecord->tag = $tag;
                 $id = $DB->insert_record('searchable_tags', $tagrecord);
                 $tagrecord->id = $id;
             }
-            $tagcache->set($tag, $tagrecord->id);
+            if (!empty($tagrecord)) {
+                $tagcache->set($tag, $tagrecord->id);
+            }
         }
 
         return $id;
@@ -88,6 +90,7 @@ class searchable {
     }
 
     static function remove_object($objecttype, $objectid) {
+        global $DB;
         $DB->delete_records('searchable_objects', ['objecttype' => $objecttype, 'objectid' => $objectid]);
     }
 
@@ -133,8 +136,10 @@ class searchable {
 
             $tags = [];
             foreach($query as $q) {
-                $tagid = self::get_tag_id($q);
-                $tags[$tagid] = $q;
+                $tagid = self::get_tag_id($q, false);
+                if ($tagid) {
+                    $tags[$tagid] = $q;
+                }
             }
 
         }
