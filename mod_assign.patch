@@ -1,3 +1,83 @@
+diff --git a/mod/assign/amd/build/grading_panel.min.js b/mod/assign/amd/build/grading_panel.min.js
+index 42aceb8..f663c2e 100644
+Binary files a/mod/assign/amd/build/grading_panel.min.js and b/mod/assign/amd/build/grading_panel.min.js differ
+diff --git a/mod/assign/amd/build/participant_selector.min.js b/mod/assign/amd/build/participant_selector.min.js
+index c5b0452..23a7ce5 100644
+Binary files a/mod/assign/amd/build/participant_selector.min.js and b/mod/assign/amd/build/participant_selector.min.js differ
+diff --git a/mod/assign/amd/src/grading_panel.js b/mod/assign/amd/src/grading_panel.js
+index 67e9f6e..2d3f97b 100644
+--- a/mod/assign/amd/src/grading_panel.js
++++ b/mod/assign/amd/src/grading_panel.js
+@@ -23,10 +23,10 @@
+  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+  * @since      3.1
+  */
+-define(['jquery', 'core/yui', 'core/notification', 'core/templates', 'core/fragment',
++define(['jquery', 'core/notification', 'core/templates', 'core/fragment',
+         'core/ajax', 'core/str', 'mod_assign/grading_form_change_checker',
+         'mod_assign/grading_events'],
+-       function($, Y, notification, templates, fragment, ajax, str, checker, GradingEvents) {
++       function($, notification, templates, fragment, ajax, str, checker, GradingEvents) {
+ 
+     /**
+      * GradingPanel class.
+@@ -89,7 +89,7 @@ define(['jquery', 'core/yui', 'core/notification', 'core/templates', 'core/fragm
+         }
+ 
+         // Copy data from notify students checkbox which was moved out of the form.
+-        var checked = $('[data-region="grading-actions-form"] [name="sendstudentnotifications"]').prop("checked");
++        var checked = $('[data-region="grading-actions-form"] [name="sendstudentnotifications"]').val();
+         $('.gradeform [name="sendstudentnotifications"]').val(checked);
+     };
+ 
+@@ -145,9 +145,6 @@ define(['jquery', 'core/yui', 'core/notification', 'core/templates', 'core/fragm
+             ]).done(function(strs) {
+                 notification.alert(strs[0], strs[1]);
+             }).fail(notification.exception);
+-            Y.use('moodle-core-formchangechecker', function() {
+-                M.core_formchangechecker.reset_form_dirty_state();
+-            });
+             if (nextUserId == this._lastUserId) {
+                 $(document).trigger('reset', nextUserId);
+             } else {
+diff --git a/mod/assign/amd/src/participant_selector.js b/mod/assign/amd/src/participant_selector.js
+index 04f09f6..2bbb2d6 100644
+--- a/mod/assign/amd/src/participant_selector.js
++++ b/mod/assign/amd/src/participant_selector.js
+@@ -53,7 +53,6 @@ define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
+          */
+         transport: function(selector, query, success, failure) {
+             var assignmentid = $(selector).attr('data-assignmentid');
+-            var groupid = $(selector).attr('data-groupid');
+             var filters = $('[data-region="configure-filters"] input[type="checkbox"]');
+             var filterstrings = [];
+ 
+@@ -63,7 +62,7 @@ define(['core/ajax', 'jquery', 'core/templates'], function(ajax, $, templates) {
+ 
+             var promise = ajax.call([{
+                 methodname: 'mod_assign_list_participants',
+-                args: {assignid: assignmentid, groupid: groupid, filter: query, limit: 30, includeenrolments: false}
++                args: {assignid: assignmentid, groupid: 0, filter: query, limit: 30, includeenrolments: false}
+             }]);
+ 
+             promise[0].then(function(results) {
+diff --git a/mod/assign/backup/moodle2/restore_assign_stepslib.php b/mod/assign/backup/moodle2/restore_assign_stepslib.php
+index aa605aa..d6886c1 100644
+--- a/mod/assign/backup/moodle2/restore_assign_stepslib.php
++++ b/mod/assign/backup/moodle2/restore_assign_stepslib.php
+@@ -94,12 +94,6 @@ class restore_assign_activity_structure_step extends restore_activity_structure_
+             $this->includesubmission = false;
+         }
+ 
+-        // Reset revealidentities if blindmarking with no user data (MDL-43796).
+-        $userinfo = $this->get_setting_value('userinfo');
+-        if (!$userinfo && $data->blindmarking) {
+-            $data->revealidentities = 0;
+-        }
+-
+         if (!empty($data->teamsubmissiongroupingid)) {
+             $data->teamsubmissiongroupingid = $this->get_mappingid('grouping',
+                                                                    $data->teamsubmissiongroupingid);
 diff --git a/mod/assign/classes/evaluation_context.php b/mod/assign/classes/evaluation_context.php
 new file mode 100644
 index 0000000..1d7bf1a
@@ -96,6 +176,112 @@ index 0000000..1d7bf1a
 +
 +}
 \ No newline at end of file
+diff --git a/mod/assign/externallib.php b/mod/assign/externallib.php
+index 8a69ffe..a0aba47 100644
+--- a/mod/assign/externallib.php
++++ b/mod/assign/externallib.php
+@@ -2648,10 +2648,7 @@ class mod_assign_external extends external_api {
+         $assign = new assign($context, null, null);
+         $assign->require_view_grades();
+ 
+-        $participants = array();
+-        if (groups_group_visible($params['groupid'], $course, $cm)) {
+-            $participants = $assign->list_participants_with_filter_status_and_group($params['groupid']);
+-        }
++        $participants = $assign->list_participants_with_filter_status_and_group($params['groupid']);
+ 
+         $userfields = user_get_default_fields();
+         if (!$params['includeenrolments']) {
+diff --git a/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor-debug.js b/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor-debug.js
+index 78f7c1a..5839440 100644
+Binary files a/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor-debug.js and b/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor-debug.js differ
+diff --git a/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor-min.js b/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor-min.js
+index 8d4b653..c0373e1 100644
+Binary files a/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor-min.js and b/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor-min.js differ
+diff --git a/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor.js b/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor.js
+index 78f7c1a..5839440 100644
+Binary files a/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor.js and b/mod/assign/feedback/editpdf/yui/build/moodle-assignfeedback_editpdf-editor/moodle-assignfeedback_editpdf-editor.js differ
+diff --git a/mod/assign/feedback/editpdf/yui/src/editor/js/editor.js b/mod/assign/feedback/editpdf/yui/src/editor/js/editor.js
+index 2c497f6..d0fc76a 100644
+--- a/mod/assign/feedback/editpdf/yui/src/editor/js/editor.js
++++ b/mod/assign/feedback/editpdf/yui/src/editor/js/editor.js
+@@ -459,9 +459,7 @@ EDITOR.prototype = {
+                             }
+ 
+                             // New ajax request delayed of a second.
+-                            M.util.js_pending('checkconversionstatus');
+                             Y.later(1000, this, function () {
+-                                M.util.js_complete('checkconversionstatus');
+                                 Y.io(AJAXBASEPROGRESS, checkconversionstatus);
+                             });
+                         }
+@@ -471,9 +469,7 @@ EDITOR.prototype = {
+                         // We only continue on error if the all pages were not generated,
+                         // and if the ajax call did not produce 5 errors in the row.
+                         if (this.pagecount === 0 && ajax_error_total < 5) {
+-                            M.util.js_pending('checkconversionstatus');
+                             Y.later(1000, this, function () {
+-                                M.util.js_complete('checkconversionstatus');
+                                 Y.io(AJAXBASEPROGRESS, checkconversionstatus);
+                             });
+                         }
+@@ -483,10 +479,8 @@ EDITOR.prototype = {
+             };
+             // We start the AJAX "generated page total number" call a second later to give a chance to
+             // the AJAX "combined pdf generation" call to clean the previous submission images.
+-            M.util.js_pending('checkconversionstatus');
+             Y.later(1000, this, function () {
+                 ajax_error_total = 0;
+-                M.util.js_complete('checkconversionstatus');
+                 Y.io(AJAXBASEPROGRESS, checkconversionstatus);
+             });
+         }
+diff --git a/mod/assign/gradingtable.php b/mod/assign/gradingtable.php
+index ade35cfd..867ac14 100644
+--- a/mod/assign/gradingtable.php
++++ b/mod/assign/gradingtable.php
+@@ -181,8 +181,8 @@ class assign_grading_table extends table_sql implements renderable {
+         if (!empty($this->assignment->get_instance()->blindmarking)) {
+             $from .= 'LEFT JOIN {assign_user_mapping} um
+                              ON u.id = um.userid
+-                            AND um.assignment = :assignmentid5 ';
+-            $params['assignmentid5'] = (int)$this->assignment->get_instance()->id;
++                            AND um.assignment = :assignmentid4 ';
++            $params['assignmentid4'] = (int)$this->assignment->get_instance()->id;
+             $fields .= ', um.id as recordid ';
+         }
+ 
+@@ -206,14 +206,7 @@ class assign_grading_table extends table_sql implements renderable {
+             } else if ($filter == ASSIGN_FILTER_REQUIRE_GRADING) {
+                 $where .= ' AND (s.timemodified IS NOT NULL AND
+                                  s.status = :submitted AND
+-                                 (s.timemodified >= g.timemodified OR g.timemodified IS NULL OR g.grade IS NULL';
+-
+-                if ($this->assignment->get_grade_item()->gradetype == GRADE_TYPE_SCALE) {
+-                    // Scale grades are set to -1 when not graded.
+-                    $where .= ' OR g.grade = -1';
+-                }
+-
+-                $where .= '))';
++                                 (s.timemodified >= g.timemodified OR g.timemodified IS NULL OR g.grade IS NULL))';
+                 $params['submitted'] = ASSIGN_SUBMISSION_STATUS_SUBMITTED;
+ 
+             } else if (strpos($filter, ASSIGN_FILTER_SINGLE_USER) === 0) {
+diff --git a/mod/assign/lang/en/assign.php b/mod/assign/lang/en/assign.php
+index 40e371d..4236cc4 100644
+--- a/mod/assign/lang/en/assign.php
++++ b/mod/assign/lang/en/assign.php
+@@ -138,8 +138,8 @@ $string['deleteallsubmissions'] = 'Delete all submissions';
+ $string['description'] = 'Description';
+ $string['downloadall'] = 'Download all submissions';
+ $string['download all submissions'] = 'Download all submissions in a zip file.';
+-$string['downloadasfolders'] = 'Download submissions in folders';
+-$string['downloadasfolders_help'] = 'If the assignment submission is more than a single file, then submissions may be downloaded in folders. Each submission is put in a separate folder, with the folder structure kept for any subfolders, and files are not renamed.';
++$string['downloadasfolders'] = 'Download as separate folders';
++$string['downloadasfolders_help'] = 'When enabled downloaded files will be placed in separate folders and files will not be renamed.';
+ $string['downloadselectedsubmissions'] = 'Download selected submissions';
+ $string['duedate'] = 'Due date';
+ $string['duedatecolon'] = 'Due date: {$a}';
 diff --git a/mod/assign/lib.php b/mod/assign/lib.php
 index 750404c..8258155 100644
 --- a/mod/assign/lib.php
@@ -277,10 +463,61 @@ index 750404c..8258155 100644
   * Serve the grading panel as a fragment.
   *
 diff --git a/mod/assign/locallib.php b/mod/assign/locallib.php
-index 33e30bb..7130025 100644
+index 33e30bb..7e8b232 100644
 --- a/mod/assign/locallib.php
 +++ b/mod/assign/locallib.php
-@@ -4848,6 +4848,16 @@ class assign {
+@@ -91,7 +91,7 @@ class assign {
+     /** @var stdClass the assignment record that contains the global settings for this assign instance */
+     private $instance;
+ 
+-    /** @var grade_item the grade_item record for this assign instance's primary grade item. */
++    /** @var stdClass the grade_item record for this assign instance's primary grade item. */
+     private $gradeitem;
+ 
+     /** @var context the context of the course module for this assign instance
+@@ -1245,7 +1245,7 @@ class assign {
+     /**
+      * Get the primary grade item for this assign instance.
+      *
+-     * @return grade_item The grade_item record
++     * @return stdClass The grade_item record
+      */
+     public function get_grade_item() {
+         if ($this->gradeitem) {
+@@ -1654,10 +1654,6 @@ class assign {
+                         $count += 1;
+                     }
+                 }
+-            } else if ($activitygroup != 0 && empty($groups)) {
+-                // Set count to 1 if $groups returns empty.
+-                // It means the group is not part of $this->get_instance()->teamsubmissiongroupingid.
+-                $count = 1;
+             }
+         } else {
+             // It is faster to loop around participants if no grouping was specified.
+@@ -1829,12 +1825,6 @@ class assign {
+                                                 array_keys($participants),
+                                                 $this->get_instance()->teamsubmissiongroupingid,
+                                                 'DISTINCT g.id, g.name');
+-                if (empty($groups)) {
+-                    // If $groups is empty it means it is not part of $this->get_instance()->teamsubmissiongroupingid.
+-                    // All submissions from students that do not belong to any of teamsubmissiongroupingid groups
+-                    // count towards groupid = 0. Setting to true as only '0' key matters.
+-                    $groups = [true];
+-                }
+                 list($groupssql, $groupsparams) = $DB->get_in_or_equal(array_keys($groups), SQL_PARAMS_NAMED);
+                 $groupsstr = 's.groupid ' . $groupssql . ' AND';
+                 $params = $params + $groupsparams;
+@@ -4592,7 +4582,7 @@ class assign {
+ 
+         if ($this->can_view_submission($user->id)) {
+ 
+-            if (has_capability('mod/assign:submit', $this->get_context(), $user, false)) {
++            if (has_capability('mod/assign:submit', $this->get_context(), $user)) {
+                 $submissionstatus = $this->get_assign_submission_status_renderable($user, $showlinks);
+                 $o .= $this->get_renderer()->render($submissionstatus);
+             }
+@@ -4848,6 +4838,16 @@ class assign {
              $o .= $this->view_student_summary($USER, true);
          }
  
@@ -297,6 +534,209 @@ index 33e30bb..7130025 100644
          $o .= $this->view_footer();
  
          \mod_assign\event\submission_status_viewed::create_from_assign($this)->trigger();
+@@ -5959,7 +5959,7 @@ class assign {
+             if ($current->grade !== null) {
+                 $current->grade = floatval($current->grade);
+             }
+-            $gradechanged = $gradecolpresent && grade_floats_different($current->grade, $modified->grade);
++            $gradechanged = $gradecolpresent && $current->grade !== $modified->grade;
+             $markingallocationchanged = $this->get_instance()->markingworkflow &&
+                                         $this->get_instance()->markingallocation &&
+                                             ($modified->allocatedmarker !== false) &&
+@@ -6724,13 +6724,14 @@ class assign {
+         if (!empty($CFG->enableoutcomes)) {
+             foreach ($gradinginfo->outcomes as $index => $outcome) {
+                 $options = make_grades_menu(-$outcome->scaleid);
+-                $options[0] = get_string('nooutcome', 'grades');
+                 if ($outcome->grades[$userid]->locked) {
++                    $options[0] = get_string('nooutcome', 'grades');
+                     $mform->addElement('static',
+                                        'outcome_' . $index . '[' . $userid . ']',
+                                        $outcome->name . ':',
+                                        $options[$outcome->grades[$userid]->grade]);
+                 } else {
++                    $options[''] = get_string('nooutcome', 'grades');
+                     $attributes = array('id' => 'menuoutcome_' . $index );
+                     $mform->addElement('select',
+                                        'outcome_' . $index . '[' . $userid . ']',
+diff --git a/mod/assign/templates/grading_actions.mustache b/mod/assign/templates/grading_actions.mustache
+index 5118bc0..28c89f1 100644
+--- a/mod/assign/templates/grading_actions.mustache
++++ b/mod/assign/templates/grading_actions.mustache
+@@ -28,6 +28,7 @@
+     Context variables required for this template:
+     * see mod/assign/classes/output/grading_app.php
+ 
++    Example context (json):
+     This template is initially hidden, and is only displayed after the current user info has been loaded.
+ }}
+ <form data-region="grading-actions-form" class="hide">
+diff --git a/mod/assign/templates/grading_app.mustache b/mod/assign/templates/grading_app.mustache
+index 60d2ec2..23f192b 100644
+--- a/mod/assign/templates/grading_app.mustache
++++ b/mod/assign/templates/grading_app.mustache
+@@ -28,6 +28,7 @@
+     Context variables required for this template:
+     * see mod/assign/classes/output/grading_app.php
+ 
++    Example context (json):
+     This template includes ajax functionality, so it cannot be shown in the template library.
+ }}
+ <div data-region="grading-navigation-panel" data-first-userid="{{userid}}" data-courseid="{{courseid}}" data-showuseridentity="{{showuseridentity}}">
+diff --git a/mod/assign/templates/grading_navigation.mustache b/mod/assign/templates/grading_navigation.mustache
+index 8b0845c..6a4e49a 100644
+--- a/mod/assign/templates/grading_navigation.mustache
++++ b/mod/assign/templates/grading_navigation.mustache
+@@ -28,6 +28,7 @@
+     Context variables required for this template:
+     * see mod/assign/classes/output/grading_app.php
+ 
++    Example context (json):
+     This template includes ajax functionality, so it cannot be shown in the template library.
+ }}
+ 
+diff --git a/mod/assign/templates/grading_navigation_user_selector.mustache b/mod/assign/templates/grading_navigation_user_selector.mustache
+index 888da9f..79835b1 100644
+--- a/mod/assign/templates/grading_navigation_user_selector.mustache
++++ b/mod/assign/templates/grading_navigation_user_selector.mustache
+@@ -28,6 +28,7 @@
+     Context variables required for this template:
+     * see mod/assign/classes/output/grading_app.php
+ 
++    Example context (json):
+     This template uses ajax functionality, so it cannot be shown in the template library.
+ }}
+ <a href="#previous" data-action="previous-user">{{{larrow}}}</a>
+diff --git a/mod/assign/templates/grading_navigation_user_summary.mustache b/mod/assign/templates/grading_navigation_user_summary.mustache
+index 864e05d..49ee55c 100644
+--- a/mod/assign/templates/grading_navigation_user_summary.mustache
++++ b/mod/assign/templates/grading_navigation_user_summary.mustache
+@@ -33,7 +33,7 @@
+         "id": "5",
+         "fullname": "Mr T",
+         "hasidentity": true,
+-        "identity": "t@example.org, T",
++        "identity": "t@example.org, T"
+         "profileimageurl": "https://moodle.org/pix/u/f3.png"
+     }
+ }}
+diff --git a/mod/assign/templates/grading_panel.mustache b/mod/assign/templates/grading_panel.mustache
+index afc6a9d..7ac97df 100644
+--- a/mod/assign/templates/grading_panel.mustache
++++ b/mod/assign/templates/grading_panel.mustache
+@@ -28,6 +28,7 @@
+     Context variables required for this template:
+     * None
+ 
++    Example context (json):
+     This template loads it's content via ajax, so it cannot be shown in the template library.
+ }}
+ {{> mod_assign/loading }}
+diff --git a/mod/assign/tests/behat/group_submission.feature b/mod/assign/tests/behat/group_submission.feature
+index fa8d5d1..6717db3 100644
+--- a/mod/assign/tests/behat/group_submission.feature
++++ b/mod/assign/tests/behat/group_submission.feature
+@@ -135,100 +135,3 @@ Feature: Group assignment submissions
+     And "Student 2" row "Status" column of "generaltable" table should contain "Submitted for grading"
+     And "Student 3" row "Status" column of "generaltable" table should contain "Submitted for grading"
+     And "Student 4" row "Status" column of "generaltable" table should contain "Submitted for grading"
+-
+-  Scenario: Confirm groups and submission counts are correct
+-    Given the following "courses" exist:
+-      | fullname | shortname | category | groupmode |
+-      | Course 1 | C1 | 0 | 1 |
+-    And the following "users" exist:
+-      | username | firstname | lastname | email |
+-      | student1 | Student | 1 | student1@example.com |
+-      | student2 | Student | 2 | student2@example.com |
+-      | student3 | Student | 3 | student3@example.com |
+-      | student4 | Student | 4 | student4@example.com |
+-      | student5 | Student | 5 | student5@example.com |
+-      | student6 | Student | 6 | student6@example.com |
+-    And the following "course enrolments" exist:
+-      | user | course | role |
+-      | student1 | C1 | student |
+-      | student2 | C1 | student |
+-      | student3 | C1 | student |
+-      | student4 | C1 | student |
+-      | student5 | C1 | student |
+-      | student6 | C1 | student |
+-    And the following "groups" exist:
+-      | name | course | idnumber |
+-      | Group 1 | C1 | G1 |
+-      | Group 2 | C1 | G2 |
+-      | Group 3 | C1 | G3 |
+-    And the following "group members" exist:
+-      | user | group |
+-      | student1 | G1 |
+-      | student2 | G1 |
+-      | student3 | G2 |
+-      | student4 | G2 |
+-      | student5 | G3 |
+-      | student6 | G3 |
+-    And the following "groupings" exist:
+-      | name | course | idnumber |
+-      | Grouping 1 | C1 | GG1 |
+-    And the following "grouping groups" exist:
+-      | grouping | group |
+-      | GG1      | G1    |
+-      | GG1      | G2    |
+-    And I log in as "admin"
+-    And I am on site homepage
+-    And I follow "Course 1"
+-    And I turn editing mode on
+-    And I add a "Assignment" to section "1" and I fill the form with:
+-      | Assignment name | Test assignment name |
+-      | Description | Test assignment description |
+-      | assignsubmission_onlinetext_enabled | 1 |
+-      | assignsubmission_file_enabled | 0 |
+-      | Students submit in groups | Yes |
+-      | Grouping for student groups | Grouping 1 |
+-      | Group mode | Separate groups |
+-      | Require group to make submission | No |
+-    And I log out
+-    And I log in as "student1"
+-    And I follow "Course 1"
+-    And I follow "Test assignment name"
+-    And I press "Add submission"
+-    And I set the following fields to these values:
+-      | Online text | I'm the student's 1 submission |
+-    And I press "Save changes"
+-    And I log out
+-    And I log in as "student3"
+-    And I follow "Course 1"
+-    And I follow "Test assignment name"
+-    And I press "Add submission"
+-    And I set the following fields to these values:
+-      | Online text | I'm the student's 3 submission |
+-    And I press "Save changes"
+-    And I log out
+-    And I log in as "student5"
+-    And I follow "Course 1"
+-    And I follow "Test assignment name"
+-    And I press "Add submission"
+-    And I set the following fields to these values:
+-      | Online text | I'm the student's 5 submission |
+-    And I press "Save changes"
+-    And I log out
+-    And I log in as "admin"
+-    And I am on site homepage
+-    And I follow "Course 1"
+-    And I follow "Test assignment name"
+-    And I should see "3" in the "Groups" "table_row"
+-    And I should see "3" in the "Submitted" "table_row"
+-    When I set the field "Separate groups" to "Group 1"
+-    And I press "Go"
+-    Then I should see "1" in the "Groups" "table_row"
+-    And I should see "1" in the "Submitted" "table_row"
+-    And I set the field "Separate groups" to "Group 2"
+-    And I press "Go"
+-    And I should see "1" in the "Groups" "table_row"
+-    And I should see "1" in the "Submitted" "table_row"
+-    And I set the field "Separate groups" to "Group 3"
+-    And I press "Go"
+-    And I should see "1" in the "Groups" "table_row"
+-    And I should see "1" in the "Submitted" "table_row"
 diff --git a/mod/assign/version.php b/mod/assign/version.php
 index 7b414f8..4c1b2c9 100644
 --- a/mod/assign/version.php

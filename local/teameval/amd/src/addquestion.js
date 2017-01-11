@@ -65,7 +65,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
                 if ($(evt.target).closest('.local-teameval-question-dropdown').length > 0) {
                     var type = $(evt.target).closest('li').data('type');
                     _this.addQuestion(type).done(function(question) {
-                        _this.editQuestion(question, true);
+                        _this.editQuestion(question);
                     });
                 }
                 dropdown.remove();
@@ -141,7 +141,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             });
         },
 
-        editQuestion: function(question, newquestion) {
+        editQuestion: function(question) {
 
             // hide the action bar
             question.find('.local-teameval-question-actions').hide();

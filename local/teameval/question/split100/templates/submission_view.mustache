@@ -33,7 +33,7 @@ Example context (json): {
 
 }}
 <div class="teamevalquestion-split100" id="teamevalquestion-split100-{{uniqid}}">
-    <h3>{{name}}</h3>
+    <h3>{{title}}</h3>
     {{{description}}}
     <div class="hundred">
     {{#users}}
@@ -50,11 +50,9 @@ Example context (json): {
     </div>
     <div class="overflows">
     {{#users}}
-        
         <div class="name{{#self}} self{{/self}}">
         <div class="middlehook"></div><div class="left hook"></div><span>{{name}}</span><div class="right hook"></div>
         </div>
-        
     {{/users}}
     </div>
 </div>

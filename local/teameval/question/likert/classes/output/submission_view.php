@@ -3,6 +3,7 @@
 namespace teamevalquestion_likert\output;
 
 use teamevalquestion_likert\question;
+use teamevalquestion_likert\response;
 use local_teameval\team_evaluation;
 use renderable;
 use templatable;
@@ -143,26 +144,26 @@ class submission_view implements renderable, templatable {
                     [
                         "ord" => 1,
                         "remaining" => 2,
-                        "name" => "Yourself",
+                        "name" => get_string('yourself', 'local_teameval'),
                         "previous" => []
                     ],
                     [
                         "ord" => 2,
                         "remaining" => 1,
-                        "name" => "Example user",
-                        "previous" => ["Yourself"]
+                        "name" => get_string('exampleuser', 'local_teameval'),
+                        "previous" => [get_string('yourself', 'local_teameval')]
                     ]
                 ];
 
                 foreach ($options as $o) {
                     $o["users"] = [
                         [
-                            "name" => "Yourself",
+                            "name" => get_string('yourself', 'local_teameval'),
                             "userid" => $userid,
                             "checked" => false
                         ],
                         [
-                            "name" => "Example user",
+                            "name" => get_string('exampleuser', 'local_teameval'),
                             "userid" => 0,
                             "checked" => false
                         ]
@@ -170,8 +171,8 @@ class submission_view implements renderable, templatable {
                     ];
                     $opts[] = $o;
 
-                    $yourself = ["name" => "Yourself", "userid" => -1];
-                    $user = ["name" => "Example user", "userid" => 0];
+                    $yourself = ["name" => get_string('yourself', 'local_teameval'), "userid" => -1];
+                    $user = ["name" => get_string('exampleuser', 'local_teameval'), "userid" => 0];
                     foreach ($options as $o) {
                         $yourself["options"][] = ["value" => $o['value'], "checked" => false];
                         $user["options"][] = ["value" => $o['value'], "checked" => false];
@@ -184,20 +185,20 @@ class submission_view implements renderable, templatable {
                     [
                         "ord" => 1,
                         "remaining" => 1,
-                        "name" => "Example user",
+                        "name" => get_string('exampleuser', 'local_teameval'),
                         "previous" => []
                     ]
                 ];
 
                 $o["users"] = [
                     [
-                        "name" => "Example user",
+                        "name" => get_string('exampleuser', 'local_teameval'),
                         "userid" => 0,
                         "checked" => false
                     ]
                 ];
 
-                $user = ["name" => "Example user", "userid" => 0];
+                $user = ["name" => get_string('exampleuser', 'local_teameval'), "userid" => 0];
                 foreach ($options as $o) {
                     $user["options"][] = ["value" => $o['value'], "checked" => false];
                 }

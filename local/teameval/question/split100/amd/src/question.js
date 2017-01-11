@@ -1,4 +1,6 @@
-define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formparse', 'core/ajax'], function(Question, $, Strings, FormParse, Ajax) {
+/* jshint shadow: true */
+define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formparse', 'core/ajax'], 
+    function(Question, $, Strings, FormParse, Ajax) {
 
     // 5% width = 0% score
     var MIN_SIZE = 5;
@@ -21,7 +23,6 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
 
     function realToDisplay (real, n) {
         var m = 100 / (100 - MIN_SIZE * n);
-        console.debug((real + MIN_SIZE * m));
         return (real + MIN_SIZE * m) / m;
     }
 
@@ -74,6 +75,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
     function Split100Question(container, teameval, contextid, self, editable, questionID, context) {
         Question.apply(this, arguments);
         this.self = self;
+
         this.context = context || {};
         this.pluginName = "split100";
 
@@ -92,11 +94,11 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
 
     Split100Question.prototype.displayToReal = function(display) {
         return displayToReal(display, this.sizes.length);
-    }
+    };
 
     Split100Question.prototype.realToDisplay = function(real) {
         return realToDisplay(real, this.sizes.length);
-    }
+    };
 
     Split100Question.prototype.showOverflow = function(index) {
         var overflow = this.container.find('.overflows').children('.name').eq(index);
@@ -143,7 +145,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
                 break;
             }
         }
-    }
+    };
 
     Split100Question.prototype.updateView = function(movingIndices) {
         
@@ -162,7 +164,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
 
         var split100 = this.container.find('.hundred');
 
-        if (split100.length == 0) {
+        if (split100.length === 0) {
             // we're in the editing view or some other weird thing has happened. bail.
             return;
         }
@@ -212,7 +214,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
             }
         }
 
-    }
+    };
 
     Split100Question.prototype.initialiseSubmissionView = function() {
         var moving;
@@ -241,15 +243,14 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
                 }
 
                 if (movingIndex == -1) {
-                    throw new Exception("The DOM tree is messed up; reload the page");
+                    throw "The DOM tree is messed up; reload the page";
                 }
             }
         })
         .on('mousemove touchmove', function(evt) {
             if (moving) {
                 evt.preventDefault();
-                
-                
+
                 var pageX;
                 if (evt.pageX) {
                     pageX = evt.pageX;
@@ -312,23 +313,27 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
             split100.children('.split').css('color', '');
         });
 
-    }
+    };
 
     Split100Question.prototype.submissionView = function() {
         return Question.prototype.submissionView.apply(this, arguments).done(function() {
             this.updateView();
             this.initialiseSubmissionView();
-        });
+        }.bind(this));
+    };
+
+    Split100Question.prototype.submissionContext = function() {
+        return this.context;
     };
 
     Split100Question.prototype.editingView = function() {
         var formdata = {
-            title: this.title,
+            title: this.context.title,
             description: {
                 format: 1,
-                text: this.description
+                text: this.context.description
             }
-        }
+        };
         return this.editForm('\\teamevalquestion_split100\\forms\\edit_form', $.param(formdata), {});
     };
 
@@ -336,8 +341,8 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
         var form = this.container.find('form');
 
         var data = FormParse.serializeObject(form);
-        this.title = data.title;
-        this.description = data.description.text;
+        this.context.title = data.title;
+        this.context.description = data.description.text;
 
         var strs = [this.self ? 'yourself' : 'exampleuser', 'exampleuser', 'exampleuser', 'exampleuser'].map(function(v, i) {
             return {key: v, component: 'teamevalquestion_split100', param: this.self ? i : i + 1};
@@ -386,7 +391,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
         }]);
 
         return promises[0];
-    }
+    };
 
     return Split100Question;
 

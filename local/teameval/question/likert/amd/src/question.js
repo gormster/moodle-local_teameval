@@ -1,4 +1,5 @@
-define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'core/str', 'core/notification', 'core/fragment'], function($, Question, Templates, Ajax, Strings, Notification, Fragment) {
+define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'core/str'], 
+    function($, Question, Templates, Ajax, Strings) {
 
     function LikertQuestion(container, teameval, contextid, self, editable, questionID, context) {
         Question.apply(this, arguments);
@@ -6,7 +7,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
         this._self = self;
         this._editable = editable;
 
-        var context = context || {};
+        context = context || {};
         this._submissioncontext = context.submissioncontext || {}; 
         this._editingcontext = context.editingcontext || {};
         this._editinglocked = context.editinglocked || false;
@@ -16,14 +17,16 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
         this._meanings = {};
 
         this.pluginName = 'likert';
-    };
+    }
 
-    LikertQuestion.prototype = new Question;
+    LikertQuestion.prototype = new Question();
 
-    LikertQuestion.prototype.submissionContext = function() { return this._submissioncontext };
+    LikertQuestion.prototype.submissionContext = function() { return this._submissioncontext; };
 
     LikertQuestion.prototype.editingView = function() {
-        return this.editForm('\\teamevalquestion_likert\\forms\\settings_form', $.param(this._editingcontext), {'locked': this._editinglocked})
+        return this.editForm('\\teamevalquestion_likert\\forms\\settings_form', 
+                             $.param(this._editingcontext), 
+                             {'locked': this._editinglocked})
         .done(function() {
             this.container.find('[name="range[min]"], [name="range[max]"]').change(this.updateMeanings.bind(this));
         }.bind(this));
@@ -42,7 +45,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
 
     LikertQuestion.prototype.submit = function() {
         var marks = [];
-        this.container.find('.responses tbody input[type="radio"]:checked').each(function(v, k) {
+        this.container.find('.responses tbody input[type="radio"]:checked').each(function() {
             var toUser = $(this).data('touser');
             var m = {};
             m.touser = toUser;
@@ -50,7 +53,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
             marks.push(m);
         });
 
-        var promises = ajax.call([{
+        var promises = Ajax.call([{
             methodname: 'teamevalquestion_likert_submit_response',
             args: {
                 teamevalid: this.teameval,
@@ -67,7 +70,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
     };
 
     LikertQuestion.prototype.updateMeanings = function() {
-        var minval = parseInt(this.container.find('[name="range[min]"]').val())
+        var minval = parseInt(this.container.find('[name="range[min]"]').val());
         var maxval = parseInt(this.container.find('[name="range[max]"]').val());
 
         for (var i = 0; i <= 10; i++) {
@@ -85,7 +88,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
                 }
             }
         }
-    }
+    };
 
     LikertQuestion.prototype.validateData = function(form) {
 
@@ -93,11 +96,11 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
 
         var data = function(v) { return $(form).find('[name="'+v+'"]').val(); };
         
-        if ((data('title').trim().length == 0) && (data('description').trim().length == 0)) {
+        if ((data('title').trim().length === 0) && (data('description').trim().length === 0)) {
             Strings.get_string('titleordescription', 'teamevalquestion_likert').done(function(str) {
                 this.container.find('[name=title]')
                     .closest('.control-group').addClass('error').end()
-                    .next('.help-inline').text(error.errors[k]);
+                    .next('.help-inline').text(str);
             
                 deferred.reject();
             });
@@ -106,24 +109,24 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
         }
 
         return deferred.promise();
-    }
+    };
 
     LikertQuestion.prototype.checkComplete = function() {
 
-        var userids = this.submissioncontext.users.map(function() { return this.userid; });
+        var userids = this._submissioncontext.users.map(function(v) { return parseInt(v.userid); });
 
-        var markedUsers = questionContainer.find('input:radio:checked').map(function() { return $(this).data('touser'); }).get();
+        var markedUsers = this.container.find('input:radio:checked').map(function() { return $(this).data('touser'); }).get();
 
-        var missingUsers = userids.filter(function(v) { return markedUsers.indexOf(v) == -1; });
+        var missingUsers = userids.filter(function(v) { return markedUsers.indexOf(v) === -1; });
 
         if (missingUsers.length > 0) {
-            questionContainer.parent().addClass('incomplete');
+            this.container.parent().addClass('incomplete');
         } else {
-            questionContainer.parent().removeClass('incomplete');
+            this.container.parent().removeClass('incomplete');
         }
 
         return (missingUsers.length > 0);
-    }
+    };
 
     return LikertQuestion;
 

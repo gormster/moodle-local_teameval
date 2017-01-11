@@ -3,6 +3,7 @@
 namespace teamevalquestion_comment\output;
 
 use teamevalquestion_comment\question;
+use teamevalquestion_comment\response;
 use local_teameval\team_evaluation;
 use renderable;
 use templatable;
@@ -40,9 +41,9 @@ class submission_view implements renderable, templatable {
                 }
                 $context['users'][] = $c;
             }
-            $context['locked'] = $locked;
+            $context['locked'] = $this->locked;
 
-            if ($locked) {
+            if ($this->locked) {
                 $context['incomplete'] = !$response->marks_given();
             }
 

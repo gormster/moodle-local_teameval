@@ -17,8 +17,10 @@ for use within your plugin.
  * @param context {Object|null} Context data provided by your question subclass
  */
 
-define(['jquery', 'core/fragment', 'core/notification', 'core/templates', 'core/ajax'], function($, Fragment, Notification, Templates, Ajax) {
+define(['jquery', 'core/fragment', 'core/notification', 'core/templates', 'core/ajax'], 
+    function($, Fragment, Notification, Templates, Ajax) {
 
+ /*jshint unused:false*/
 function Question(container, teameval, contextid, self, editable, questionID, context) {
     this.teameval = teameval;
     this.questionID = questionID;
@@ -36,12 +38,11 @@ Question.prototype.submissionView = function() {
     if (submissionTemplate) {
         var submissionContext = this.submissionContext();
         var promise = Templates.render(submissionTemplate, submissionContext);
-        promise.done(function(html, js) {
+        return promise.done(function(html, js) {
             Templates.replaceNodeContents(this.container, html, js);
         }.bind(this));
-        return promise;
     }
-}
+};
 
 /**
  * Replace the contents of container with the editing view.
@@ -57,7 +58,7 @@ Question.prototype.editingView = function() {
         }.bind(this));
         return promise;
     }
-}
+};
     
 /**
  * Save question data back to the database in Moodle. You must use should_update_question/update_question.
@@ -144,7 +145,7 @@ Question.prototype.editForm = function(form, formdata, customdata) {
     promise.fail(Notification.exception);
 
     return promise;
-}
+};
 
 Question.prototype.submitForm = function(form, method, args) {
     var promise = this.validateData(form).then(function() {
@@ -169,7 +170,7 @@ Question.prototype.submitForm = function(form, method, args) {
     }.bind(this));
 
     return promise;
-}
+};
 
 Question.prototype.saveForm = function(form, ordinal, options, callback) {
     var defaults = {
@@ -180,20 +181,20 @@ Question.prototype.saveForm = function(form, ordinal, options, callback) {
         resolveWithID: true
     };
 
-    var options = $.extend({}, defaults, options);
+    var parsed_options = $.extend({}, defaults, options);
 
-    $(form).find('[name='+options.ordinalName+']').val(ordinal);
+    $(form).find('[name='+parsed_options.ordinalName+']').val(ordinal);
 
     if (this.questionID) {
-        $(form).find('[name='+options.questionIDName+']').val(this.questionID);
+        $(form).find('[name='+parsed_options.questionIDName+']').val(this.questionID);
     }
 
-    return this.submitForm(form, options.methodname, options.args).then(function(result) {
+    return this.submitForm(form, parsed_options.methodname, parsed_options.args).then(function(result) {
         this.questionID = result.id;
         if (callback) {
             callback(result);
         }
-        return options.resolveWithID ? result.id : result;
+        return parsed_options.resolveWithID ? result.id : result;
     }.bind(this));
 };
 

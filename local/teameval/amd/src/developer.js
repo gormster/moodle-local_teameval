@@ -19,6 +19,22 @@ define(['jquery', 'local_teameval/langen'], function($, LanGen) { return {
                 $(this).val(LanGen.generateSentence());
             });
 
+            $('.teamevalquestion-split100').closest('.question-container').each(function() {
+                var qObject = $(this).data('question');
+                var sizes = qObject.sizes;
+                sizes = sizes.map(function() {
+                    return Math.random();
+                });
+                var total = sizes.reduce(function(a, b) {
+                    return a + b;
+                });
+                sizes = sizes.map(function(v) {
+                    return parseInt(v / total * 100);
+                });
+                qObject.sizes = sizes;
+                qObject.updateView();
+            });
+
         });
 
         $('.local-teameval-developer-buttons').append(randomiseButton);

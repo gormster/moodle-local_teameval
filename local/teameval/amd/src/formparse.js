@@ -12,7 +12,7 @@ define(['jquery'], function($) {
             path.push(m[1]);
             if (m[2]) {
                 var x;
-                while(x = b.exec(m[2])) {
+                while((x = b.exec(m[2]))) {
                     path.push(x[1]);
                 }
             }
@@ -23,14 +23,14 @@ define(['jquery'], function($) {
     function setValue(obj, path, value) {
         var key = path.shift();
         if (path.length > 0) {
-            if (key == '' || !obj[key]) {
+            if (key === '' || !obj[key]) {
                 var nextKey = path[0];
                 var newVal = {};
-                if ((nextKey == '') || (parseInt(nextKey) == nextKey)) { //nextKey is an integer
+                if ((nextKey === '') || (parseInt(nextKey) == nextKey)) { //nextKey is an integer
                     newVal = [];
                 }
                 setValue(newVal, path, value);
-                if (key == '') {
+                if (key === '') {
                     obj.push(newVal);
                 } else {
                     obj[key] = newVal;
@@ -39,7 +39,7 @@ define(['jquery'], function($) {
                 setValue(obj[key], path, value);
             }
         } else {
-            if (key == '') {
+            if (key === '') {
                 obj.push(value);
             } else {
                 obj[key] = value;

@@ -71,7 +71,7 @@ class question implements \local_teameval\question {
             $context->editingcontext = $this->edit_form_data();
             $context->editinglocked = $this->any_response_submitted();
             $context->submissioncontext = $this->submission_view($locked)->export_for_template($output);
-        } else if (team_evaluation::check_capability($this->teameval, ['local/teameval:createquestionnaire'], ['doanything' => false])) {
+        } else if (team_evaluation::check_capability($this->teameval, ['local/teameval:submitquestionnaire'], ['doanything' => false])) {
             $context->submissioncontext = $this->submission_view($locked)->export_for_template($output);
         }
 

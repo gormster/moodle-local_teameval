@@ -1,4 +1,6 @@
-define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'core/notification', 'core/str', 'local_teameval/formparse'], function($, Question, Ajax, Templates, Notification, Strings, Formparse){
+/* jshint maxlen: 150 */
+define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'core/notification', 'core/str', 'local_teameval/formparse'], 
+    function($, Question, Ajax, Templates, Notification, Strings, Formparse){
 
     function CommentQuestion(container, teameval, contextid, self, editing, questionID, context) {
         Question.apply(this, arguments);
@@ -6,7 +8,7 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
         this._self = self;
         this._editing = editing;
 
-        var context = context || {};
+        context = context || {};
         this._editingcontext = context.editingcontext || {_newquestion: true};
         this._editinglocked = context.editinglocked || false;
         this._submissioncontext = context.submissioncontext || {};
@@ -14,21 +16,20 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
         this.pluginName = 'comment';
     }
 
-    CommentQuestion.prototype = new Question;
+    CommentQuestion.prototype = new Question();
 
-    CommentQuestion.prototype.submissionContext = function() { return this._submissioncontext; }
+    CommentQuestion.prototype.submissionContext = function() { return this._submissioncontext; };
 
     CommentQuestion.prototype.submissionView = function() {
-        console.log(this._submissioncontext);
         return Question.prototype.submissionView.apply(this, arguments);
-    }
+    };
     
-    CommentQuestion.prototype.editingContext = function() { return this._editingcontext; }
+    CommentQuestion.prototype.editingContext = function() { return this._editingcontext; };
 
     CommentQuestion.prototype.editingView = function() {
-        console.debug($.param(this._editingcontext));
-        return this.editForm('\\teamevalquestion_comment\\forms\\edit_form', $.param(this._editingcontext), {'locked': this._editinglocked});
-    }
+        return this.editForm('\\teamevalquestion_comment\\forms\\edit_form', 
+            $.param(this._editingcontext), {'locked': this._editinglocked});
+    };
 
     CommentQuestion.prototype.save = function(ordinal) {
         var form = this.container.find('form');
@@ -59,11 +60,13 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
         }.bind(this));
     };
 
-    function validateData(data) {
+    CommentQuestion.prototype.validateData = function(form) {
 
         var deferred = $.Deferred();
         
-        if ((data.title.trim().length == 0) && (data.description.trim().length == 0)) {
+        var data = function(v) { return $(form).find('[name="'+v+'"]').val(); };
+
+        if ((data.title.trim().length === 0) && (data.description.trim().length === 0)) {
             Strings.get_string('titleordescription', 'teamevalquestion_comment').done(function(str) {
                 deferred.reject({invalid: true, errors: { title: str, description: str} });
             });
@@ -72,11 +75,11 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
         }
 
         return deferred.promise();
-    }
+    };
 
     CommentQuestion.prototype.submit = function() {
         var comments = [];
-        this.container.find('.comments textarea').each(function(v, k) {
+        this.container.find('.comments textarea').each(function() {
             var toUser = $(this).data('touser');
             var m = {};
             m.touser = toUser;
@@ -101,17 +104,17 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
         return promises[0].then(function() {
             return {'incomplete': incomplete};
         });
-    }
+    };
 
     function checkComplete() {
         var incomplete = this.container.find('textarea').filter(function() {
-            return $(this).val().trim().length == 0;
+            return $(this).val().trim().length === 0;
         });
 
         if (incomplete.length > 0) {
-            questionContainer.parent().addClass('incomplete');
+            this.container.parent().addClass('incomplete');
         } else {
-            questionContainer.parent().removeClass('incomplete');
+            this.container.parent().removeClass('incomplete');
         }
 
         return incomplete.length > 0;
