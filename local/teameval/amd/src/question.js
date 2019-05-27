@@ -8,7 +8,7 @@ for use within your plugin.
 
 /**
  * Your constructor must conform to this signature, even if you do not use some of these parameters.
- * 
+ *
  * @param container {jQuery} The top level of your question. Insert your content in this container.
  * @param teameval {int} The ID of the team evaluation instance. Useful to pass to web services.
  * @param self {bool} If self-evaluation is enabled.
@@ -17,15 +17,16 @@ for use within your plugin.
  * @param context {Object|null} Context data provided by your question subclass
  */
 
-define(['jquery', 'core/fragment', 'core/notification', 'core/templates', 'core/ajax'], 
+define(['jquery', 'core/fragment', 'core/notification', 'core/templates', 'core/ajax'],
     function($, Fragment, Notification, Templates, Ajax) {
 
- /*jshint unused:false*/
-function Question(container, teameval, contextid, self, editable, questionID, context) {
+ /*eslint no-unused-vars:0*/
+function Question(container, teameval, contextid, self, editable, optional, questionID, context) {
     this.teameval = teameval;
     this.questionID = questionID;
     this.container = container;
     this.contextid = contextid;
+    this.optional = optional;
 }
 
 /**
@@ -59,7 +60,7 @@ Question.prototype.editingView = function() {
         return promise;
     }
 };
-    
+
 /**
  * Save question data back to the database in Moodle. You must use should_update_question/update_question.
  * @param ordinal {int} The index of this question in the questionnaire. You must pass this to update_question().
@@ -72,18 +73,16 @@ Question.prototype.save = function(ordinal) {};
  * @return {Promise} A promise that resolves when the question has been deleted.
  */
 Question.prototype.delete = function() {
-    if (this.questionID) {
-        if (this.pluginName) {
-            var promises = Ajax.call([{
-                methodname: 'teamevalquestion_'+this.pluginName+'_delete_question',
-                args: {
-                    teamevalid: this.teameval,
-                    id: this.questionID
-                }
-            }]);
+    if (this.questionID && this.pluginName) {
+        var promises = Ajax.call([{
+            methodname: 'teamevalquestion_'+this.pluginName+'_delete_question',
+            args: {
+                teamevalid: this.teameval,
+                id: this.questionID
+            }
+        }]);
 
-            return promises[0];
-        }
+        return promises[0];
     }
     // No ID, never been saved
     return $.Deferred().resolve();
@@ -91,9 +90,32 @@ Question.prototype.delete = function() {
 
 /**
  * Submit this response to Moodle. You should check if the user can submit using can_submit_response.
- * @return {Promise} A promise that resolves when the response has been submitted.
+ * You MUST call the function that is passed to you as the first argument to submit(). You should call
+ * this with either the arguments to an Ajax.call method (an object with "methodname" and "args"), or
+ * you can call it with no arguments to indicate that no AJAX call is needed. The callback will return
+ * the Promise that corresponds to your AJAX call.
+ *
+ * You SHOULD return a boolean true or false stating whether or not the question has been sufficiently
+ * filled out to constitute being complete. If this does not make sense for your question type, you MUST
+ * return true.
+ *
+ * Basically, your function should look like this:
+ *
+ *     var promise = callback({ methodname: "my_plugin_submit_question",
+ *         args: { teamevalid: this.teameval, id: this.questionID, response: myUsersResponseData }});
+ *     promise.done(function(data) {
+ *         // this bit is totally optional
+ *         updateDisplay(data);
+ *     });
+ *
+ * If submission involves multiple webservice calls, you should return the one that finalises the response.
+ * In other words, given a fully completed questionnaire, Team Evaluation should be able to use your
+ * response to calculate scores. If you need to make calls to update your state that don't affect the
+ * response, you may do so afterward, using promise.done.
+ *
+ * @return {bool} true if the question is complete, otherwise false
  */
-Question.prototype.submit = function() {};
+Question.prototype.submit = function(callback) {};
 
 
 // The following are convenience methods or helpers for default implementations
@@ -158,7 +180,7 @@ Question.prototype.submitForm = function(form, method, args) {
         }]);
 
         return promises[0];
-            
+
     }.bind(this));
 
     promise.fail(function(error) {

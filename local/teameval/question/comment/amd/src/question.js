@@ -1,8 +1,8 @@
-/* jshint maxlen: 150 */
-define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'core/notification', 'core/str', 'local_teameval/formparse'], 
-    function($, Question, Ajax, Templates, Notification, Strings, Formparse){
+define(['jquery', 'local_teameval/question', 'core/templates', 'core/notification',
+    'core/str', 'local_teameval/formparse', 'local_teameval/editor'],
+    function($, Question, Templates, Notification, Strings, Formparse, Editor){
 
-    function CommentQuestion(container, teameval, contextid, self, editing, questionID, context) {
+    function CommentQuestion(container, teameval, contextid, self, editing, optional, questionID, context) {
         Question.apply(this, arguments);
 
         this._self = self;
@@ -23,16 +23,17 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
     CommentQuestion.prototype.submissionView = function() {
         return Question.prototype.submissionView.apply(this, arguments);
     };
-    
+
     CommentQuestion.prototype.editingContext = function() { return this._editingcontext; };
 
     CommentQuestion.prototype.editingView = function() {
-        return this.editForm('\\teamevalquestion_comment\\forms\\edit_form', 
+        return this.editForm('\\teamevalquestion_comment\\forms\\edit_form',
             $.param(this._editingcontext), {'locked': this._editinglocked});
     };
 
     CommentQuestion.prototype.save = function(ordinal) {
         var form = this.container.find('form');
+        Editor.saveAll(form);
 
         var data = Formparse.serializeObject(form);
 
@@ -63,10 +64,10 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
     CommentQuestion.prototype.validateData = function(form) {
 
         var deferred = $.Deferred();
-        
+
         var data = function(v) { return $(form).find('[name="'+v+'"]').val(); };
 
-        if ((data.title.trim().length === 0) && (data.description.trim().length === 0)) {
+        if ((data('title').trim().length === 0) && (data('description').trim().length === 0)) {
             Strings.get_string('titleordescription', 'teamevalquestion_comment').done(function(str) {
                 deferred.reject({invalid: true, errors: { title: str, description: str} });
             });
@@ -77,7 +78,7 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
         return deferred.promise();
     };
 
-    CommentQuestion.prototype.submit = function() {
+    CommentQuestion.prototype.submit = function(call) {
         var comments = [];
         this.container.find('.comments textarea').each(function() {
             var toUser = $(this).data('touser');
@@ -87,23 +88,21 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
             comments.push(m);
         });
 
-        var promises = Ajax.call([{
+        call({
             methodname: 'teamevalquestion_comment_submit_response',
             args: {
                 teamevalid: this.teameval,
                 id: this.questionID,
                 comments: comments
             }
-        }]);
+        });
 
         var incomplete = false;
         if (this._submissioncontext.optional) {
             incomplete = checkComplete();
         }
 
-        return promises[0].then(function() {
-            return {'incomplete': incomplete};
-        });
+        return !incomplete;
     };
 
     function checkComplete() {
@@ -119,20 +118,6 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
 
         return incomplete.length > 0;
     }
-
-    CommentQuestion.prototype.delete = function() {
-
-        var promises = Ajax.call([{
-            methodname: 'teamevalquestion_comment_delete_question',
-            args: {
-                teamevalid: this.teameval,
-                id: this.questionID
-            }
-        }]);
-
-        return promises[0];
-
-    };
 
     return CommentQuestion;
 

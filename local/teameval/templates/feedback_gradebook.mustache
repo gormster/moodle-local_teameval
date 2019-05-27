@@ -1,0 +1,65 @@
+{{!
+    @template local_teameval/feedback_gradebook
+
+    Example context (json): {
+
+        "score": "67.0",
+        "questions": [
+            {
+                "title": "Example Question 1",
+                "teammates": [
+                    {
+                        "name": "Yourself",
+                        "self": true,
+                        "feedback": "I'm the best!"
+                    },
+                    {
+                        "name": "Example User 2",
+                        "feedback": "Feedback from example user 2."
+                    },
+                    {
+                        "name": "Example User 3",
+                        "feedback": "Feedback from example user 3."
+                    },
+                    {
+                        "name": "Example User 4",
+                        "feedback": "Feedback from example user 4."
+                    }
+                ]
+            },
+            {
+                "title": "Example Question 2",
+                "teammates": [
+                    {
+                        "name": "Yourself",
+                        "self": true,
+                        "feedback": "I'm the best there ever was!"
+                    },
+                    {
+                        "name": "Example User 2",
+                        "feedback": "Some more feedback from example user 2."
+                    },
+                    {
+                        "name": "Example User 3",
+                        "feedback": "Some more feedback from example user 3."
+                    },
+                    {
+                        "name": "Example User 4",
+                        "feedback": "Some more feedback from example user 4."
+                    }
+                ]
+            }
+        ]
+    }
+
+}}
+
+<h3>{{#str}} pluginname, local_teameval {{/str}}</h3>
+{{#questions}}
+    <h4>{{title}}</h4>
+    <ul>
+        {{#teammates}}
+        <li>{{#name}}<strong>{{name}}:</strong> {{/name}}{{feedback}}</li>
+        {{/teammates}}
+    </ul>
+{{/questions}}

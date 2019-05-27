@@ -6,7 +6,7 @@
 </div>
 {{#js}}
 require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
-    
+
     $('#local-teameval-turn-on-{{uniqid}}').click(function() {
         var promises = Ajax.call([{
             methodname: "local_teameval_turn_on",

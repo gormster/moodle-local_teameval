@@ -6,11 +6,11 @@ use coding_exception;
 use stdClass;
 use renderer_base;
 use local_teameval\team_evaluation;
-    
-class question implements \local_teameval\question {
-    
+
+class question implements \local_teameval\question_response_preparing {
+
     public $id;
-    
+
     protected $teameval;
     protected $_title;
     protected $_description;
@@ -34,9 +34,10 @@ class question implements \local_teameval\question {
             $this->_meanings         = json_decode($record->meanings);
         }
     }
-    
+
+    private static $name_keys = ["title", "description", "minval", "maxval", "meanings"];
     public function __get($name) {
-        if (in_array($name, ["title", "description", "minval", "maxval", "meanings"])) {
+        if (in_array($name, self::$name_keys)) {
             $priv = "_$name";
             return $this->$priv;
         }
@@ -46,7 +47,7 @@ class question implements \local_teameval\question {
     public function submission_view($locked = false) {
         return new output\submission_view($this, $this->teameval, $locked);
     }
-    
+
     public function editing_view() {
         return new output\editing_view($this, $this->any_response_submitted());
     }
@@ -76,12 +77,42 @@ class question implements \local_teameval\question {
         }
 
         return $context;
-        
+
     }
 
     public function any_response_submitted() {
         global $DB;
         return $DB->record_exists('teamevalquestion_likert_resp', ['questionid' => $this->id]);
+    }
+
+    protected $response_data = [];
+    public function prepare_responses($users) {
+        global $DB;
+
+        $unprepared = array_diff_key($users, $this->response_data);
+
+        if (empty($unprepared)) {
+            return;
+        }
+
+        // prepare_responses might be called more than once
+        foreach ($unprepared as $uid => $_) {
+            $this->response_data[$uid] = [];
+        }
+
+        list($sql, $params) = $DB->get_in_or_equal(array_keys($unprepared), SQL_PARAMS_NAMED, 'user');
+        $recordset = $DB->get_recordset_select("teamevalquestion_likert_resp", "questionid = :questionid AND fromuser $sql", ["questionid" => $this->id] + $params, '', 'id,fromuser,touser,mark,markdate');
+
+        foreach ($recordset as $record) {
+            $this->response_data[$record->fromuser][$record->touser] = $record;
+        }
+    }
+
+    public function get_response($userid) {
+        if (isset($this->response_data[$userid])) {
+            return new response($this->teameval, $this, $userid, $this->response_data[$userid]);
+        }
+        return new response($this->teameval, $this, $userid);
     }
 
     public function plugin_name() {
@@ -101,9 +132,9 @@ class question implements \local_teameval\question {
     }
 
     public function maximum_value() {
-        return $this->maxval;
+        return $this->_maxval;
     }
-    
+
     public function get_title() {
         return $this->title;
     }
@@ -143,5 +174,5 @@ class question implements \local_teameval\question {
 
         $DB->delete_records_list('teamevalquestion_likert_resp', 'questionid', $ids);
     }
-    
+
 }

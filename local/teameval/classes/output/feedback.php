@@ -21,76 +21,63 @@ class feedback implements \renderable, \templatable {
         $adjusted = $teameval->adjusted_grade($userid);
         $this->score = is_null($adjusted) ? null : $teameval->get_evaluation_context()->format_grade($adjusted);
 
-        $allquestions = $teameval->get_questions();
-
-        $questions = array_filter($allquestions, function($q) {
-            return $q->question->has_feedback();
-        });		
-
-        $teammates = $teameval->teammates($userid);
-
-        $this->feedback = [];
-
-
-        foreach($questions as $qi) {
-            $question = new stdClass;
-            $question->title = $qi->question->get_title();
-            $question->teammates = [];
-            $question->feedbackrenderer = 'teamevalquestion_' . $qi->plugininfo->name;
-            $question->anonymous = $qi->question->is_feedback_anonymous();
-
-            foreach($teammates as $uid => $m) {
-
-                if ($teameval->rescinded($qi->id, $uid, $userid) == \local_teameval\FEEDBACK_RESCINDED) {
-                    continue;
-                }
-
-                $response = $teameval->get_response($qi, $uid);
-                $f = new stdClass;
-
-                if(!$question->anonymous) {
-                    $f->user = $m;
-                }
-
-                $f->feedback = $response->feedback_for_readable($userid);
-
-                // TODO: if there is no feedback, don't add
-
-                $question->teammates[] = $f;
-            }
-            $this->feedback[] = $question;
-        }
+        $this->feedback = $teameval->all_feedback($userid, false);
 
     }
 
-    public function export_for_template(\renderer_base $output) {
+    public function export_for_template(\renderer_base $output, $rendered = true) {
+        global $PAGE;
 
         $context = new stdClass;
 
-        global $PAGE;
+        $feedback = [];
+
+        $context->questions = [];
 
         foreach($this->feedback as $q) {
-            $renderer = $PAGE->get_renderer($q->feedbackrenderer);
-            unset($q->feedbackrenderer);
+            $f = new stdClass;
+
+            if ($rendered) {
+                $feedbackrenderer = 'teamevalquestion_' . $q->question->plugininfo->name;
+                $renderer = $PAGE->get_renderer($feedbackrenderer);
+            }
+
+            $f->title = $q->question->question->get_title();
+            $f->anonymous = $q->question->question->is_feedback_anonymous();
+            $f->teammates = [];
 
             foreach($q->teammates as $t) {
-                if (isset($t->user)) {
-                    $t->userpic = $output->render(new user_picture($t->user));
-                    if($t->user->id == $this->userid) {
-                        $t->self = true;
-                        $t->name = get_string('yourself', 'local_teameval');
+                $fb = new stdClass;
+                if (isset($t->from)) {
+                    if ($rendered) {
+                        $fb->userpic = $output->render(new user_picture($t->from));
+                    }
+                    if($t->from->id == $this->userid) {
+                        $fb->self = true;
+                        $fb->name = get_string('yourself', 'local_teameval');
                     } else {
-                        $t->name = fullname($t->user);
+                        $fb->name = fullname($t->from);
                     }
                 }
-                $t->feedback = $renderer->render($t->feedback);
-                unset($t->user);
+
+                if ($rendered) {
+                    $fb->feedback = $renderer->render($t->feedback->feedback_for_readable($this->userid));
+                } else {
+                    $fb->feedback = $t->feedback->feedback_for($this->userid);
+                }
+
+                if (!empty($fb->feedback)) {
+                    $f->teammates[] = $fb;
+                }
+            }
+
+            if (!empty($f->teammates)) {
+                $context->questions[] = $f;
             }
 
         }
 
         $context->score = $this->score;
-        $context->questions = $this->feedback;
 
         return $context;
 

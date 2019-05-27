@@ -37,7 +37,7 @@ class settings_form extends ajaxform {
         $mform->addElement('header', 'meanings_header', get_string('meanings', 'teamevalquestion_likert'));
 
         //repeat_elements doesn't actually do what we want, so we'll manually loop
-        for ($i=0; $i <= 10; $i++) { 
+        for ($i=0; $i <= 10; $i++) {
             $mform->addElement('text', "meanings[$i]", $i, ['class' => 'hidden']);
             $mform->setType("meanings[$i]", PARAM_RAW_TRIMMED);
         }
@@ -48,7 +48,7 @@ class settings_form extends ajaxform {
 
         $range = $mform->getElementValue('range');
 
-        for ($i=$range['min'][0]; $i <= $range['max'][0]; $i++) { 
+        for ($i=$range['min'][0]; $i <= $range['max'][0]; $i++) {
             $el = $mform->getElement("meanings[$i]");
             $el->removeAttribute('class');
         }

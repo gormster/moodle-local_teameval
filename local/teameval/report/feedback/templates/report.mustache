@@ -69,11 +69,11 @@ Example context (json): {
                             ]
                         }
                     ]
-                }	
+                }
             ]
         }
     ]
-} 
+}
 
 }}
 
@@ -162,7 +162,7 @@ require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], f
 
         c['cmid'] = {{cmid}};
         c['states'] = [];
-        
+
         $.each(updatedStates, function(k,v) {
             var matches = k.match(/(\d+)-(\d+)-(\d+)/);
             var state = {

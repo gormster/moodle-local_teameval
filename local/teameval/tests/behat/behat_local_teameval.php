@@ -5,11 +5,33 @@ require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))) . '/group/lib
 
 use Behat\Gherkin\Node\TableNode as TableNode;
 use Behat\Mink\Exception\DriverException as DriverException;
+use Behat\Behat\Hook\Scope\AfterStepScope;
+use Behat\Testwork\Tester\Result\TestResult;
 
 use local_teameval\team_evaluation;
 
 // todo: should this be a subclass of behat_data_generator?
 class behat_local_teameval extends behat_base {
+
+    /**
+     * @AfterStep
+     *
+     * @param AfterStepScope $scope
+     */
+    public function waitToDebugInBrowserOnStepErrorHook(AfterStepScope $scope)
+    {
+        if ($scope->getTestResult()->getResultCode() == TestResult::FAILED) {
+            fwrite(STDOUT, PHP_EOL . "PAUSING ON FAIL - RETURN TO CONTINUE" . PHP_EOL);
+            fwrite(STDOUT, $scope->getTestResult()->getException() . PHP_EOL);
+            $handle = fopen ("php://stdin","r");
+            $input = fgets($handle);
+            while($input === false) {
+                $input = fgets($handle);
+                $this->getSession()->wait(1000);
+            }
+
+        }
+    }
 
     private function user_record($fullname) {
         $names = explode(' ', $fullname);
@@ -21,7 +43,7 @@ class behat_local_teameval extends behat_base {
             $last = implode(' ', array_slice($names, floor(count($names) / 2)));
         }
         $username = strtolower(implode('', $names));
-        $r = [$username, $first, $last, $username . "@example.com"];
+        $r = [$username, $first, $last, $username . "@example.com", ''];
         return $r;
     }
 
@@ -85,7 +107,7 @@ class behat_local_teameval extends behat_base {
 
         $optional = [
             'group name format' => 'Group #',
-            'student name format' => 'Student #',
+            'student name format' => 'Student#',
             'teacher' => 'Teacher 1'
         ];
 
@@ -110,7 +132,7 @@ class behat_local_teameval extends behat_base {
 
         $groups = [['idnumber', 'course']];
         $groupmembers = [['user', 'group']];
-        $users = [['username', 'firstname', 'lastname', 'email']];
+        $users = [['username', 'firstname', 'lastname', 'email', 'alternatename']];
         $enrolments = [['user', 'course', 'role']];
 
         $teacheruser = $this->user_record($teacher);
@@ -146,7 +168,9 @@ class behat_local_teameval extends behat_base {
                 'assignsubmission_onlinetext_enabled' => 1,
                 'assignsubmission_file_enabled' => 0,
                 'teamsubmission' => 1,
-                'groupmode' => 1
+                'groupmode' => 1,
+                'preventsubmissionnotingroup' => 1,
+                'submissiondrafts' => 0
             ];
             $assignmentdata = $this->get_suboptions('assignment', $options, $assignmentdefaults);
 
@@ -164,6 +188,23 @@ class behat_local_teameval extends behat_base {
             $teameval->update_settings($teamevaloptions);
         }
 
+    }
+
+    /**
+     * Add a question of the given type
+     * @Shortcuts add_questions.feature
+     * @Given /^I add a "(?P<selector_string>[^"]*)" question to team evaluation with:$/
+     * @param  string    $type The question type as the language string (i.e. "Likert", "Split 100")
+     * @param  TableNode $data The form data
+     */
+    public function i_add_question_to_teameval($type, TableNode $data) {
+        $questions = team_evaluation::get_question_plugins_static();
+        $plugin = $questions[$type];
+        $this->execute('behat_general::i_click_on_in_the', ['Add Question', 'link', '.local-teameval-containerbox', 'css_element']);
+        $this->execute('behat_general::i_click_on_in_the', [$plugin->displayname, 'list_item', '.local-teameval-question-dropdown', 'css_element']);
+        $this->execute('behat_forms::i_set_the_following_fields_to_these_values', [$data]);
+        $this->execute('behat_general::i_click_on_in_the', ['Save', 'button', '.local-teameval-question.editing', 'css_element']);
+        $this->wait_for_pending_js();
     }
 
 }

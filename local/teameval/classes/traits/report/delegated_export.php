@@ -3,7 +3,7 @@
 namespace local_teameval\traits\report;
 
 trait delegated_export {
-    
+
     public function export($filename) {
 
         $info = pathinfo($filename);

@@ -33,7 +33,7 @@ Feature: In a course, a teacher creates a module and starts team evaluation
     @javascript
     Scenario: Team submission assignment allows local_teameval
         Given I log in as "teacher1"
-        And I follow "Course 1"
+        And I am on "Course 1" course homepage
         And I turn editing mode on
         And I add a "Assignment" to section "1" and I fill the form with:
             | name | Test teameval assignment |
@@ -41,6 +41,7 @@ Feature: In a course, a teacher creates a module and starts team evaluation
             | assignsubmission_onlinetext_enabled | 1 |
             | assignsubmission_file_enabled | 0 |
             | teamsubmission | Yes |
+            | preventsubmissionnotingroup | 1 |
             | groupmode | Visible groups |
 
         When I follow "Test teameval assignment"
@@ -58,7 +59,7 @@ Feature: In a course, a teacher creates a module and starts team evaluation
     @javascript
     Scenario: Individual submission assignment does not allow local_teameval
         Given I log in as "teacher1"
-        And I follow "Course 1"
+        And I am on "Course 1" course homepage
         And I turn editing mode on
         And I add a "Assignment" to section "1" and I fill the form with:
             | name | Test teameval assignment |
@@ -74,3 +75,4 @@ Feature: In a course, a teacher creates a module and starts team evaluation
         Then ".local-teameval-container-heading" "css_element" should not exist
 
     # TODO: Add workshep checks if installed. Not quite sure what the step is to skip if an activity doesn't exist.
+

@@ -1,6 +1,6 @@
 <?php
     $capabilities = array(
- 
+
     'block/teameval_templates:myaddinstance' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
@@ -15,7 +15,7 @@
 
     'block/teameval_templates:addinstance' => array(
         'riskbitmask' => RISK_SPAM | RISK_XSS,
- 
+
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
@@ -23,7 +23,7 @@
             'coursecreator' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
- 
+
         'clonepermissionsfrom' => 'moodle/site:manageblocks'
     ),
 

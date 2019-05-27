@@ -30,11 +30,11 @@ class submission_view implements renderable, templatable {
     public function __construct(question $question, team_evaluation $teameval, $locked = false) {
         global $USER, $DB;
 
-        $this->self = $teameval->get_settings()->self;
+        $this->self = $teameval->self;
 
         $this->title = $question->title;
         $this->description = $question->description;
-        
+
         if (team_evaluation::check_capability($teameval, ['local/teameval:submitquestionnaire'], ['doanything' => false])) {
             $teammates = $teameval->teammates($USER->id);
 
@@ -43,7 +43,10 @@ class submission_view implements renderable, templatable {
             foreach ($teammates as $id => $user) {
                 $u = new stdClass;
                 $u->user = $user;
-                $u->pct = $response->opinion_of($id) ?: 100.0 / count($teammates);
+                $u->pct = $response->opinion_of($id);
+                if (is_null($u->pct)) {
+                    $u->pct = 100.0 / count($teammates);
+                }
                 $this->users[] = $u;
             }
             $this->locked = $locked;
@@ -57,7 +60,7 @@ class submission_view implements renderable, templatable {
         $users = [];
         if ($this->demo) {
             $pcts = [20, 10, 15, 55];
-            for ($i=0; $i < 4; $i++) { 
+            for ($i=0; $i < 4; $i++) {
                 $user = new stdClass;
                 $user->id = -$i;
                 $user->name = $this->self ? ($i == 0 ? "Yourself" : "Example User $i") : "Example User ".($i + 1);
@@ -119,8 +122,10 @@ class submission_view implements renderable, templatable {
                 return ($fixed[$a] + $corrector - $percents[$a]) - ($fixed[$b] + $corrector - $percents[$b]);
             });
 
-            for ($i=0; $i < abs($difference); $i++) { 
-                list($k, $v) = each($fixed);
+            for ($i=0; $i < abs($difference); $i++) {
+                $k = key($fixed);
+                $v = current($fixed);
+                next($fixed);
                 $v += $corrector;
                 $fixed[$k] = $v;
             }

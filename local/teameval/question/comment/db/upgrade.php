@@ -14,7 +14,7 @@ function xmldb_teamevalquestion_comment_upgrade($oldversion) {
 
         // Define field anonymous to be added to teamevalquestion_comment.
         $table = new xmldb_table('teamevalquestion_comment');
-        
+
         $field = new xmldb_field('anonymous', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'description');
 
         // Conditionally launch add field anonymous.
@@ -30,7 +30,7 @@ function xmldb_teamevalquestion_comment_upgrade($oldversion) {
         }
 
 
-    	upgrade_plugin_savepoint(true, 2016061400, 'teamevalquestion', 'comment');	
+        upgrade_plugin_savepoint(true, 2016061400, 'teamevalquestion', 'comment');
     }
 
     if ($oldversion < 2016061500) {

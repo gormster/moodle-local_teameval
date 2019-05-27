@@ -51,9 +51,6 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="combo" TYPE="unique" FIELDS="cmid, level, target"/>
       </KEYS>
-      <INDEXES>
-        <INDEX NAME="cmid" UNIQUE="false" FIELDS="cmid"/>
-      </INDEXES>
     </TABLE>
     <TABLE NAME="teameval_rescind" COMMENT="Responses with rescinded feedback">
       <FIELDS>

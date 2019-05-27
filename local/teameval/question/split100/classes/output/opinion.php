@@ -9,7 +9,8 @@ class opinion extends templatable implements \renderable {
     public $mark;
 
     function __construct($mark = null) {
-        $this->mark = $mark;
+        $this->emtpy = is_null($mark);
+        $this->mark = round($mark, 2);
     }
 
     function export_for_template(\renderer_base $output) {

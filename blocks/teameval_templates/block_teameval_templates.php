@@ -3,14 +3,14 @@
 use local_teameval\team_evaluation;
 
 class block_teameval_templates extends block_base {
-    
+
     public function init() {
         $this->title = get_string('teamevaltemplates', 'block_teameval_templates');
     }
 
     function applicable_formats() {
       return array(
-        'all' => true, 
+        'all' => true,
         'mod' => false
       );
     }
@@ -29,7 +29,7 @@ class block_teameval_templates extends block_base {
             // if ($this->content !== null) {
             //   return $this->content;
             // }
-    
+
             $this->content = new stdClass;
 
             $this->content->text = html_writer::start_tag('ul', ['class' => 'teameval-template-tree']);
@@ -89,7 +89,7 @@ class block_teameval_templates extends block_base {
             return $this->content;
 
         }
-     
+
         $empty = new stdClass;
         return $empty;
 

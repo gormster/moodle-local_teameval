@@ -26,16 +26,16 @@ define([], function() {
             var el = Math.floor(Math.random() * hiragana.length);
             output += hiragana[el];
         }
-        
+
         return output;
 
     }
 
-    String.prototype.capitalise = function() {
-        
-        return this.charAt(0).toUpperCase() + this.substring(1);
-        
-    };
+    function capitalise(s) {
+
+        return s.charAt(0).toUpperCase() + s.substring(1);
+
+    }
 
     function generateSentence() {
 
@@ -45,14 +45,14 @@ define([], function() {
         for(var i = 0; i < len; i++) {
             var word = generateWord();
             if (Math.random() * 10 < 1) {
-                word = word.capitalise();
+                word = capitalise(word);
             }
             output.push(word);
         }
 
         var sentence = output.join(" ");
-        
-        return sentence.capitalise() + ".";
+
+        return capitalise(sentence) + ".";
 
     }
 

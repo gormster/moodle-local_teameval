@@ -8,7 +8,7 @@ use local_teameval\team_evaluation;
 
 define('MIN_SIZE', 5);
 
-class question implements \local_teameval\question {
+class question implements \local_teameval\question_response_preparing {
 
     protected $id;
 
@@ -32,19 +32,20 @@ class question implements \local_teameval\question {
         }
     }
 
+    private static $name_keys = ['id', 'title', 'description'];
     public function __get($name) {
-        if (in_array($name, ['id', 'title', 'description'])) {
+        if (in_array($name, self::$name_keys)) {
             return $this->$name;
         }
         throw new coding_exception('Property "' . $name . '" doesn\'t exist');
     }
 
     public function submission_view($locked = false) {
-        return new output\submission_view($this, $this->teameval, $locked);   
+        return new output\submission_view($this, $this->teameval, $locked);
     }
 
     public function editing_view() {
-        return new output\editing_view($this, $this->teameval);   
+        return new output\editing_view($this, $this->teameval);
     }
 
     public function context_data(renderer_base $output, $locked = false) {
@@ -52,7 +53,7 @@ class question implements \local_teameval\question {
     }
 
     // Convert between display width (in percentage) and real percentage values
-    // In display widths, a 0% score means a 5% width    
+    // In display widths, a 0% score means a 5% width
     public static function display_to_real($display, $n) {
         $m = 100 / (100 - MIN_SIZE * $n);
         return $m * $display - (MIN_SIZE * m);
@@ -92,7 +93,37 @@ class question implements \local_teameval\question {
     }
 
     public function is_feedback_anonymous() {
-        return false;        
+        return false;
+    }
+
+    protected $response_data = [];
+    public function prepare_responses($users) {
+        global $DB;
+
+        $unprepared = array_diff_key($users, $this->response_data);
+
+        if (empty($unprepared)) {
+            return;
+        }
+
+        // prepare_responses might be called more than once
+        foreach ($unprepared as $uid => $_) {
+            $this->response_data[$uid] = [];
+        }
+
+        list($sql, $params) = $DB->get_in_or_equal(array_keys($unprepared), SQL_PARAMS_NAMED, 'user');
+        $recordset = $DB->get_recordset_select("teamevalquestion_split100_rs", "questionid = :questionid AND fromuser $sql", ["questionid" => $this->id] + $params);
+
+        foreach ($recordset as $record) {
+            $this->response_data[$record->fromuser][$record->touser] = $record;
+        }
+    }
+
+    public function get_response($userid) {
+        if (isset($this->response_data[$userid])) {
+            return new response($this->teameval, $this, $userid, $this->response_data[$userid]);
+        }
+        return new response($this->teameval, $this, $userid);
     }
 
     public static function duplicate_question($questionid, $newteameval) {

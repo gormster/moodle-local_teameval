@@ -39,11 +39,13 @@ class external extends external_api {
     }
 
     public static function update_states($cmid, $states) {
-        global $USER;
+        global $USER, $PAGE;
 
         team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:invalidateassessment'], ['must_exist' => true]);
 
         $teameval = team_evaluation::from_cmid($cmid);
+
+        $PAGE->set_context($teameval->get_context());
 
         foreach($states as $s) {
             $teameval->rescind_feedback_for($s['questionid'], $s['markerid'], $s['targetid'], $s['state']);
@@ -59,7 +61,7 @@ class external extends external_api {
             if (!isset($approves[$uid])) {
                 $approves[$uid] = 0;
             }
-            // either approve or reject counts	
+            // either approve or reject counts
             $approves[$uid]++;
         }
 

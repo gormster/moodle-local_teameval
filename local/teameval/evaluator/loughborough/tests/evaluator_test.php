@@ -29,7 +29,8 @@ class teamevaluator_loughborough_evaluator_testcase extends advanced_testcase {
         $this->course = $data->create_course();
 
         team_evaluation::_clear_groups_members_cache();
-        
+        team_evaluation::_clear_response_cache();
+
         $this->groups = [];
         $this->users = [];
         $this->members = [];
@@ -55,13 +56,16 @@ class teamevaluator_loughborough_evaluator_testcase extends advanced_testcase {
         $this->setAdminUser();
 
         $data = $this->getDataGenerator();
-        
+
         $generator = $data->get_plugin_generator('mod_assign');
         $assign = $generator->create_instance(array('course'=>$this->course->id));
 
         // create teameval
         $teameval = team_evaluation::from_cmid($assign->cmid);
-        $this->teameval = $this->getMock(team_evaluation::class, ['get_question_plugins'], [$teameval->id]);
+        $this->teameval = $this->getMockBuilder(team_evaluation::class)
+                               ->setMethods(['get_question_plugins'])
+                               ->setConstructorArgs([$teameval->id])
+                               ->getMock();
 
         $this->teameval->method('get_question_plugins')
             ->willReturn(['mock' => mock_question::mock_question_plugininfo($this)]);
@@ -103,8 +107,8 @@ class teamevaluator_loughborough_evaluator_testcase extends advanced_testcase {
         // This is an array of the marks that each user awarded in each question
         // to each of their teammates (including themselves) in each group.
         // In other words, $rawresponses[group][marker][question][markee] = mark.
-        
-        $rawresponses = 
+
+        $rawresponses =
             [[[[5, 0, 3, 0], [3, 1, 3, 3], [23, 67, 35, 90]],
               [[0, 0, 0, 1], [2, 3, 3, 2], [28, 34, 15, 64]],
               [[2, 1, 2, 5], [3, 1, 1, 3], [100, 36, 31, 56]],
@@ -147,7 +151,8 @@ class teamevaluator_loughborough_evaluator_testcase extends advanced_testcase {
 
         foreach($this->users as $userid => $user) {
             $score = $scores[$userid];
-            list($_, $refscore) = each($referencescores);
+            $refscore = current($referencescores);
+            next($referencescores);
             $this->assertEquals($score, $refscore);
         }
 
@@ -166,7 +171,7 @@ class teamevaluator_loughborough_evaluator_testcase extends advanced_testcase {
             ['min' => 10, 'max' => 100]
         ]);
 
-        $rawresponses = 
+        $rawresponses =
             [[[[5, 0, 3, 0], [3, 1, 3, 3], [23, 67, 35, 90]],
               [[0, 0, 0, 1], [2, 3, 3, 2], [28, 34, 15, 64]],
               [[2, 1, 2, 5], [3, 1, 1, 3], [100, 36, 31, 56]],
@@ -213,7 +218,8 @@ class teamevaluator_loughborough_evaluator_testcase extends advanced_testcase {
 
         foreach($this->users as $userid => $user) {
             $score = $scores[$userid];
-            list($_, $refscore) = each($referencescores);
+            $refscore = current($referencescores);
+            next($referencescores);
             $this->assertEquals($score, $refscore);
         }
 
@@ -231,7 +237,7 @@ class teamevaluator_loughborough_evaluator_testcase extends advanced_testcase {
             ['min' => 10, 'max' => 100]
         ]);
 
-        $rawresponses = 
+        $rawresponses =
             [[[[5, 0, 3, 0], [3, 1, 3, 3], [23, 67, 35, 90]],
               [[0, 0, 0, 0], [2, 3, 3, 2], [28, 34, 15, 64]],
               [[2, 1, 2, 5], [3, 1, 1, 3], [100, 36, 31, 56]],
@@ -266,7 +272,8 @@ class teamevaluator_loughborough_evaluator_testcase extends advanced_testcase {
 
         foreach($this->users as $userid => $user) {
             $score = $scores[$userid];
-            list($_, $refscore) = each($referencescores);
+            $refscore = current($referencescores);
+            next($referencescores);
             $this->assertEquals($score, $refscore);
         }
 

@@ -1,5 +1,5 @@
 <?php
-    
+
 namespace local_teameval\output;
 
 use plugin_renderer_base;
@@ -16,8 +16,8 @@ use file_picker;
 class renderer extends plugin_renderer_base {
 
     public function render_team_evaluation_block(team_evaluation_block $block) {
-        
-        global $PAGE, $USER;
+
+        global $PAGE;
 
         $context = $block->context;
 
@@ -45,7 +45,7 @@ class renderer extends plugin_renderer_base {
             return '';
 
         }
-        
+
         $c = new stdClass; // template context
 
         if (isset($block->settings)) {
@@ -73,14 +73,14 @@ class renderer extends plugin_renderer_base {
         $c->questionnaire = $this->render($block->questionnaire);
 
         $c->hiderelease = $block->hiderelease;
-        
-        if (\local_teameval\is_developer()) {
+
+        if (\local_teameval\is_developer() || defined('BEHAT_SITE_RUNNING')) {
             $PAGE->requires->js_call_amd('local_teameval/developer', 'initialise');
         }
 
         $PAGE->requires->js_call_amd('local_teameval/tabs', 'initialise');
         return $this->render_from_template('local_teameval/block', $c);
-        
+
     }
 
     public function render_feedback(feedback $feedback) {
@@ -113,6 +113,6 @@ class renderer extends plugin_renderer_base {
 
     public function render_download_template(download_template $downloadtemplate) {
         return $this->render_from_template('local_teameval/download_template', $downloadtemplate->export_for_template($this));
-    }    
+    }
 
 }

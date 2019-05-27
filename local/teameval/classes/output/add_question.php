@@ -12,7 +12,7 @@ use file_picker;
 use local_teameval\team_evaluation;
 
 class add_question implements renderable, templatable {
-    
+
 
     protected $teamevalid;
 
@@ -34,7 +34,7 @@ class add_question implements renderable, templatable {
 
         $this->contextid = $teameval->get_context()->id;
 
-        $this->self = $teameval->get_settings()->self;
+        $this->self = $teameval->self;
 
         $this->locked = $teameval->questionnaire_locked() !== false;
 
@@ -43,10 +43,10 @@ class add_question implements renderable, templatable {
         $this->showtoolbox = $teameval->num_questions() == 0;
 
         $this->download = moodle_url::make_pluginfile_url(
-            $teameval->get_context()->id, 
-            'local_teameval', 
-            'template', 
-            $teameval->id, 
+            $teameval->get_context()->id,
+            'local_teameval',
+            'template',
+            $teameval->id,
             '/', $teameval->template_file_name());
 
         if ($this->locked == false) {

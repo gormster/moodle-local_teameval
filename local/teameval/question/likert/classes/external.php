@@ -68,7 +68,7 @@ class external extends external_api {
     }
 
     public static function update_question($teamevalid, $formdata) {
-        global $DB, $USER, $PAGE;
+        global $PAGE;
 
         // Call the function imported from the update_from_form trait
         $id = static::update_question_internal($teamevalid, $formdata);
@@ -101,7 +101,7 @@ class external extends external_api {
             'marks' => new external_multiple_structure(
                 new external_single_structure([
                     'touser' => new external_value(PARAM_INT, 'userid of user being rated'),
-                    'value' => new external_value(PARAM_INT, 'selected value')	
+                    'value' => new external_value(PARAM_INT, 'selected value')
                 ])
             )
         ]);
@@ -112,7 +112,7 @@ class external extends external_api {
     }
 
     public static function submit_response($teamevalid, $id, $marks) {
-        global $DB, $USER;
+        global $USER;
 
         team_evaluation::guard_capability($teamevalid, ['local/teameval:submitquestionnaire'], ['doanything' => false]);
 
@@ -120,7 +120,7 @@ class external extends external_api {
 
         if ($teameval->can_submit_response('likert', $id, $USER->id)) {
             $formdata = [];
-            
+
             foreach($marks as $m) {
                 $touser = $m['touser'];
                 $value = $m['value'];
@@ -130,6 +130,8 @@ class external extends external_api {
             $question = new question($teameval, $id);
             $response = new response($teameval, $question, $USER->id);
             $response->update_response($formdata);
+
+            $teameval->did_submit_response('likert', $id, $USER->id);
         }
     }
 

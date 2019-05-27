@@ -3,6 +3,7 @@
 namespace local_teameval;
 
 use moodle_exception;
+use coding_exception;
 
 abstract class evaluation_context {
 
@@ -39,6 +40,30 @@ abstract class evaluation_context {
         }
 
         return true;
+    }
+
+    /**
+     * Provide a sensible default deadline value. Deadlines are still off by default, but this
+     * will be the default value if the user enables it.
+     *
+     * Optional. Return NULL if there is no default deadline.
+     * @return int|null Timestamp of the default deadline
+     * @codeCoverageIgnore
+     */
+    public function default_deadline() {
+        return NULL;
+    }
+
+    /**
+     * Provide the absolute earliest date before which teameval should not accept a value
+     * for deadline. If there is a date before which evaluation_permitted always returns false,
+     * return that date.
+     *
+     * Optional. Return NULL if there is no minimum deadline.
+     * @return int|null Timestamp of the minimum deadline
+     */
+    public function minimum_deadline() {
+        return NULL;
     }
 
     /**
@@ -106,23 +131,10 @@ abstract class evaluation_context {
     /**
      * You can override this function to customise the appearance of Teameval feedback in the gradebook.
      * TODO make this less awful (use a template)
-     * @codeCoverageIgnore
      */
-    protected function format_feedback($feedbacks) {
-        $o = '<h3>Team Evaluation</h3>';
-        foreach($feedbacks as $q) {
-            $o .= "<h4>{$q->title}</h4><ul>";
-            foreach($q->feedbacks as $fb) {
-                $feedback = clean_text($fb->feedback);
-                if (isset($fb->from)) {
-                    $o .= "<li><strong>{$fb->from}:</strong> $feedback</li>";
-                } else {
-                    $o .= "<li>$feedback</li>";
-                }
-            }
-            $o .= '</ul>';
-        }
-        return $o;
+    protected function format_feedback($feedback) {
+        global $OUTPUT;
+        return $OUTPUT->render_from_template('local_teameval/feedback_gradebook', $feedback);
     }
 
     /**
@@ -130,15 +142,26 @@ abstract class evaluation_context {
      * grades to your users, you can do it here.
      */
     public function format_grade($grade) {
-        $gradeitem = \grade_item::fetch([
-            'itemtype' => 'mod', 
-            'itemmodule' => $this->cm->modname, 
-            'iteminstance' => $this->cm->instance, 
-            'itemnumber' => 0]);
-        if ($gradeitem) {
-            return (string)round($grade, $gradeitem->get_decimals());
+        static $gradeitem = null;
+        // blech, but phpunit process separation straight up doesn't work, so ignore the static when testing
+        if (defined('PHPUNIT_TEST') && PHPUNIT_TEST) {
+            $gradeitem = null;
         }
-        return (string)round($grade, 2);
+
+        if (is_null($gradeitem)) {
+            $gradeitem = \grade_item::fetch([
+                'itemtype' => 'mod',
+                'itemmodule' => $this->cm->modname,
+                'iteminstance' => $this->cm->instance,
+                'itemnumber' => 0]);
+
+        }
+
+        if ($gradeitem) {
+            return grade_format_gradevalue($grade, $gradeitem);
+        } else {
+            return format_float($grade, 2, true);
+        }
     }
 
 
@@ -148,7 +171,7 @@ abstract class evaluation_context {
 
 
     /*
-     * The above methods were teameval calling in to your plugin. 
+     * The above methods were teameval calling in to your plugin.
      * These are methods for you to call into teameval.
      * You should probably not override these, as teameval uses them as well.
      */
@@ -169,7 +192,7 @@ abstract class evaluation_context {
         if (!function_exists($function)) {
             // throw something
             if ($throw) {
-                throw new moodle_exception("noevaluationcontext");
+                throw new coding_exception("{$modname}_get_evaluation_context is not defined", empty($cm));
             }
             return null;
         }
@@ -202,8 +225,9 @@ abstract class evaluation_context {
     /**
      * Deprecated. Use team_evaluation() instead.
      * @deprecated
-     * @param int $userid 
+     * @param int $userid
      * @return bool
+     * @codeCoverageIgnore
      */
     public function marks_available($userid) {
         $teameval = $this->team_evaluation();
@@ -216,8 +240,9 @@ abstract class evaluation_context {
     /**
      * Deprecated. Use team_evaluation() instead.
      * @deprecated
-     * @param int $userid 
+     * @param int $userid
      * @return float
+     * @codeCoverageIgnore
      */
     public function user_completion($userid) {
         $teameval = $this->team_evaluation();
@@ -228,6 +253,7 @@ abstract class evaluation_context {
     }
 
     public function update_grades($grades) {
+        global $PAGE;
 
         // If evaluation isn't permitted or enabled here, don't do anything
         if (!$this->evaluation_permitted() || !$this->evaluation_enabled()) {
@@ -241,6 +267,7 @@ abstract class evaluation_context {
         }
 
         $teameval = $this->team_evaluation();
+        $output = $PAGE->get_renderer('core');
 
         foreach($grades as $userid => $grade) {
             if (!is_object($grade)) {
@@ -250,15 +277,16 @@ abstract class evaluation_context {
 
             if (isset($grade->rawgrade)) {
 
-                if ($this->marks_available($userid)) {
+                if ($teameval->marks_available($userid)) {
                     $grade->rawgrade *= $teameval->multiplier_for_user($userid);
                     $grade->rawgrade = min(max(0, $grade->rawgrade), 100);
-                    $feedbacks = $teameval->all_feedback($userid);
-                    if(count($feedbacks)) {
-                        if (empty($grade->feedbacks)) {
+                    $feedback = new \local_teameval\output\feedback($teameval, $userid);
+                    $feedback = $feedback->export_for_template($output, false);
+                    if(!empty($feedback->questions)) {
+                        if (empty($grade->feedback)) {
                             $grade->feedback = "";
                         }
-                        $grade->feedback .= $this->format_feedback($feedbacks);
+                        $grade->feedback .= $this->format_feedback($feedback);
                     }
                 } else {
                     $grade->rawgrade = null;
@@ -269,7 +297,7 @@ abstract class evaluation_context {
 
         return $grades;
     }
-    
+
 
     // COURSE RESET
 
@@ -300,8 +328,6 @@ abstract class evaluation_context {
     }
 
     public function reset_userdata($options) {
-        global $DB;
-
         $ns = static::plugin_namespace() . '_';
 
         $resetresponses = $ns . 'reset_teameval_responses';

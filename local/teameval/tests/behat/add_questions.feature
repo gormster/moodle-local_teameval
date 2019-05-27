@@ -20,7 +20,7 @@ Feature: Teachers add, remove and reorder questions in a team evaluation questio
     @javascript
     Scenario:
         Given I log in as "teacher1"
-        And I follow "Course 1"
+        And I am on "Course 1" course homepage
         And I follow "Test assignment"
         And I click on "Add Question" "link" in the ".local-teameval-containerbox" "css_element"
         And I click on "Likert" "list_item"
@@ -45,4 +45,4 @@ Feature: Teachers add, remove and reorder questions in a team evaluation questio
         And I should see "2: Two" in the "responses" "table"
         And I should see "3: Three" in the "responses" "table"
         And I should see "Yourself" in the "responses" "table"
-        And I should see "Example User" in the "responses" "table"
+        And I should see "Example user" in the "responses" "table"

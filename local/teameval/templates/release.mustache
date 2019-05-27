@@ -47,13 +47,16 @@
         <div class="local-teameval-switch{{#all}} checked{{/all}}" data-level="0" data-target="0" id="switch-all-{{uniqid}}">
         </div>
     </div>
+    <div class="release-all-info">
+        {{{releaseallmarksinfo}}}
+    </div>
     <div class="groups">
         {{#groups}}
         <div class="group">
             <header>
                 <h3>{{name}}</h3>
                 <div class="group-grade">{{#grade}}Group grade: {{grade}}{{/grade}}{{^grade}}Not yet graded{{/grade}}</div>
-                <div class="group-release-switch">Release marks for group 
+                <div class="group-release-switch">Release marks for group
                     <div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="1" data-target="{{gid}}" data-override="switch-all-{{uniqid}}" id="switch-group-{{gid}}-{{uniqid}}"></div>
                 </div>
             </header>

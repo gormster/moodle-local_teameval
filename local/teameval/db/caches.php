@@ -9,7 +9,7 @@ $definitions = array(
     ),
 
     'evalcontext' => array(
-    	'mode' => cache_store::MODE_REQUEST,
-    	'simplekeys' => true,
+        'mode' => cache_store::MODE_REQUEST,
+        'simplekeys' => true,
     )
 );

@@ -83,13 +83,13 @@ class export_task extends backup_task {
 
     public function get_logger() {
         if (empty($this->logger)) {
-            $this->logger = new error_log_logger();
+            $this->logger = new error_log_logger(backup::LOG_DEBUG);
         }
         return $this->logger;
     }
 
     // wish there was a better place to do this, but the built-in helper classes
-    // have it hard wired as /backup/. 
+    // have it hard wired as /backup/.
     public function get_basepath() {
         global $CFG;
 

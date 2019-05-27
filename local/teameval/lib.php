@@ -26,7 +26,7 @@ function local_teameval_pluginfile($course, $cm, $context, $filearea, $args, $fo
         if (!$file) {
             return false;
         }
-     
+
         send_stored_file($file, null, 0, $forcedownload);
 
     }
@@ -48,7 +48,7 @@ function local_teameval_pluginfile($course, $cm, $context, $filearea, $args, $fo
             $plugininfo = $teameval->get_report_plugin($reportplugin);
             $cls = $plugininfo->get_report_class();
             $report = new $cls($teameval);
-            
+
             $report->export($filename);
         }
 
@@ -83,7 +83,7 @@ function local_teameval_output_fragment_ajaxform($args) {
     if (!empty($args['customdata'])) {
         $customdata = json_decode($args['customdata'], true);
     }
-    
+
     $form = new $class(null, $customdata);
     $form->set_data($formdata);
 

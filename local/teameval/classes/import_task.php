@@ -27,7 +27,7 @@ use base_plan_exception;
 use stdClass;
 
 class import_task extends restore_task {
-    
+
     protected $teamevalid;
 
     protected $contextid;
@@ -44,7 +44,7 @@ class import_task extends restore_task {
         $this->teamevalid = $teameval->id;
         $this->contextid = $teameval->get_context()->id;
         $this->source = $source;
-        
+
         $this->importid = uniqid('te_import_');
         $this->progress = new \core\progress\none();
 
@@ -106,7 +106,7 @@ class import_task extends restore_task {
     }
 
     // wish there was a better place to do this, but the built-in helper classes
-    // have it hard wired as /backup/. 
+    // have it hard wired as /backup/.
     public function get_basepath() {
         global $CFG;
 

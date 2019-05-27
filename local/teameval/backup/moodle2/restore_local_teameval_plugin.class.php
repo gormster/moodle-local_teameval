@@ -106,7 +106,7 @@ class restore_local_teameval_plugin extends restore_local_plugin {
         // and sometimes with an array
         $settings = (object)$settings;
 
-        $cmid = $this->task->get_moduleid();	
+        $cmid = $this->task->get_moduleid();
         $settings->cmid = $cmid;
         $settings->deadline = $this->apply_date_offset($settings->deadline);
         $oldid = $settings->id;
@@ -130,7 +130,7 @@ class restore_local_teameval_plugin extends restore_local_plugin {
         global $DB;
 
         $this->step->log('processing question!', backup::LOG_DEBUG);
-        
+
         $question = (object)$question;
         $oldid = $question->id;
 
@@ -197,7 +197,7 @@ class restore_local_teameval_plugin extends restore_local_plugin {
 
     protected function process_release($release, $level) {
         global $DB;
-        
+
         $cmid = $this->task->get_moduleid();
 
         $release->level = $level;
@@ -250,7 +250,7 @@ class restore_local_teameval_plugin extends restore_local_plugin {
         // This global declaration is required, because where we do require_once($backupfile);
         // That file may in turn try to do require_once($CFG->dirroot ...).
         // That worked in the past, we should keep it working.
-        
+
         // Check the requested plugintype is a valid one.
         if (!array_key_exists($plugintype, core_component::get_plugin_types())) {
             throw new restore_step_exception('incorrect_plugin_type', $plugintype);

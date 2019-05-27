@@ -39,6 +39,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $this->assign = $generator->create_instance(array('course'=>$this->course->id, 'teamsubmission' => true));
 
         team_evaluation::_clear_groups_members_cache();
+        team_evaluation::_clear_response_cache();
 
         // make some users & some groups
 
@@ -46,7 +47,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
             $group = $this->getDataGenerator()->create_group(['courseid' => $this->course->id]);
             $this->groups[$group->id] = $group;
             $this->members[$group->id] = [];
-         
+
             for($j = 0; $j < 5; $j++) {
                 $user = $this->getDataGenerator()->create_user();
                 $this->students[$user->id] = $user;
@@ -61,7 +62,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         // make a teacher role
 
         $this->teacher = $this->getDataGenerator()->create_user();
-        $this->getDataGenerator()->enrol_user($this->teacher->id, $this->course->id, 'teacher');
+        $this->getDataGenerator()->enrol_user($this->teacher->id, $this->course->id, 'editingteacher');
 
         mock_question::clear_questions();
         mock_response::clear_responses();
@@ -93,17 +94,23 @@ class local_teameval_submission_testcase extends advanced_testcase {
 
         $methods = array_merge(['get_question_plugins'], $methods);
 
-        $this->teameval = $this->getMock(team_evaluation::class, $methods, [$teameval->id]);
+        $this->teameval = $this->getMockBuilder(team_evaluation::class)
+                               ->setMethods($methods)
+                               ->setConstructorArgs([$teameval->id])
+                               ->getMock();
 
         $this->teameval->method('get_question_plugins')
             ->willReturn(['mock' => mock_question::mock_question_plugininfo($this)]);
 
     }
 
+    /**
+     * TODO: potential problem here with $opinions not being userid indexed
+     */
     private function add_responses($userid, $questions, $opinions = [1,2,3,4,5]) {
         foreach($questions as $q) {
             $response = new mock_response($this->teameval, $q, $userid);
-            $response->opinions = $opinions;
+            $response->update_opinions($opinions);
         }
     }
 
@@ -119,7 +126,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         }
 
         // now add a question with no completion
-        
+
         $this->add_questions(1);
 
         $question = current($this->questions);
@@ -128,7 +135,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $question->value = false;
 
         // user completion should still be 100%
-        
+
         foreach($this->students as $id => $user) {
             $rslt = $this->teameval->user_completion($id);
             $this->assertEquals(1, $rslt);
@@ -203,14 +210,14 @@ class local_teameval_submission_testcase extends advanced_testcase {
 
         $rslt = $this->teameval->group_ready($groupA->id);
         $this->assertTrue($rslt);
-        
+
         $rslt = $this->teameval->group_ready($groupB->id);
         $this->assertFalse($rslt);
 
         $question3 = end($this->questions);
         $student5 = end($this->members[$groupB->id]);
         $response = new mock_response($this->teameval, $question3, $student5->id);
-        $response->opinions = [3,3,3,3,3];
+        $response->update_opinions([3,3,3,3,3]);
 
         $rslt = $this->teameval->group_ready($groupB->id);
         $this->assertTrue($rslt);
@@ -229,7 +236,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         }
 
         $evaluator = mock_evaluator::install_mock($this->teameval);
-        $evaluator->scores = ($scores);
+        $evaluator->scores = $scores;
 
         $settings = new stdClass;
         $settings->noncompletionpenalty = 0;
@@ -239,13 +246,13 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $multis = $this->teameval->multipliers();
 
         // multis should be equal to scores
-        
+
         foreach ($multis as $key => $value) {
             $this->assertEquals($value, $scores[$key]);
         }
 
         // now add a non completion penalty
-        
+
         $this->add_questions();
 
         $settings->noncompletionpenalty = 0.1;
@@ -253,12 +260,13 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $this->teameval->update_settings($settings);
 
         $multis = $this->teameval->multipliers();
+        $this->assertCount(15, $multis);
         foreach ($multis as $key => $value) {
             $this->assertEquals($value, ($scores[$key] * 0.5 + 0.5) - 0.1);
         }
 
-        // now get a user to fill out the questionnaire        
-        
+        // now get a user to fill out the questionnaire
+
         list($question0, $question1, $question2) = $this->questions;
 
         $group = reset($this->groups);
@@ -273,7 +281,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $this->assertEquals($multis[$id], $value);
 
         $multis = $this->teameval->multipliers_for_group($group->id);
-        $this->assertEquals($multis[$id], $value);        
+        $this->assertEquals($multis[$id], $value);
 
         $this->add_responses($id, [$question1]);
         $value = $this->teameval->multiplier_for_user($id);
@@ -284,10 +292,43 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $this->assertEquals($value, ($scores[$id] * 0.5 + 0.5));
 
         // try and get a score for someone not in the teameval
-        
+
+        $this->expectException(moodle_exception::class);
         $notascore = $this->teameval->multiplier_for_user($this->teacher->id);
         $this->assertNull($notascore);
 
+    }
+
+    public function test_null_score_multiplier() {
+        $mock_scores = [1.53,1.23,1.65,0.67,0.21,0.34,1.42,0.46,0.75,1.61,1.60,1.00,0.83,0.93,0.64];
+        $scores = [];
+
+        $non_completion_group = next($this->groups);
+        $non_completion_members = $this->members[$non_completion_group->id];
+
+        foreach(array_map(null, $this->students, $mock_scores) as list($user, $score)) {
+            if (array_key_exists($user->id, $non_completion_members)) {
+                $scores[$user->id] = null;
+            } else {
+                $scores[$user->id] = $score;
+            }
+        }
+
+        $evaluator = mock_evaluator::install_mock($this->teameval);
+        $evaluator->scores = $scores;
+
+        $settings = new stdClass;
+        $settings->noncompletionpenalty = 0;
+        $settings->fraction = 1;
+        $this->teameval->update_settings($settings);
+
+        $multis = $this->teameval->multipliers_for_group($non_completion_group->id);
+
+        $this->assertEquals(5, count($multis));
+
+        foreach ($multis as $key => $value) {
+            $this->assertEquals($value, 1.0);
+        }
     }
 
     public function test_teammates() {
@@ -325,6 +366,25 @@ class local_teameval_submission_testcase extends advanced_testcase {
 
     }
 
+    public function test_group_members_must_have_permission_to_submit() {
+
+        $group = reset($this->groups);
+        $members = $this->members[$group->id];
+
+        $ta = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($ta->id, $this->course->id, 'teacher');
+
+        $this->getDataGenerator()->create_group_member(['userid' => $ta->id, 'groupid' => $group->id]);
+
+        team_evaluation::_clear_groups_members_cache();
+
+        $testmembers = $this->teameval->group_members($group->id);
+
+        $this->assertEquals(count($members), count($testmembers));
+        $this->assertArrayNotHasKey($ta->id, $testmembers);
+
+    }
+
     public function test_adjusted_grade() {
 
         $mock_scores = [1.53,1.23,1.65,0.67,0.21,0.34,1.42,0.46,0.75,1.61,1.60,1.00,0.83,0.93,0.64];
@@ -334,23 +394,80 @@ class local_teameval_submission_testcase extends advanced_testcase {
         }
 
         $evaluator = mock_evaluator::install_mock($this->teameval);
-        $evaluator->scores = ($scores);
+        $evaluator->scores = $scores;
 
         $evalcontext = mock_evaluation_context::install_mock($this->teameval);
+
+        $this->add_questions(3);
+        $rawresponses = [
+            // Group A
+            [
+                [[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3]],
+                [[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3]],
+                [[1,1,1,1,1],[2,2,2,2,2],[]],
+                [[1,1,1,1,1],[2,2,2,2,2],[]],
+                [[1,1,1,1,1],[],[]]
+            ],
+            // Group B
+            [
+                [[1,1,1,1,1],[2,2,2,2,2],[]],
+                [[1,1,1,1,1],[2,2,2,2,2],[]],
+                [],
+                [[1,1,1,1,1],[],[]],
+                [[1,1,1,1,1],[],[]]
+            ],
+            // Group C
+            [
+                [[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3]],
+                [[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3]],
+                [],
+                [],
+                []
+            ]
+        ];
+
+        $responses = mock_response::get_responses($this->teameval, $this->members, $this->questions, $rawresponses);
 
         foreach (array_map(null, $this->groups, [40, 60, 90]) as list($group, $grade)) {
             $evalcontext->groupgrades[$group->id] = $grade;
         }
 
-        $expected_results = [50.60,44.60,53.00,33.40,24.20,40.20,72.60,43.80,52.50,78.30,117.00,90.00,82.35,86.85,73.80];
+        $settings = new stdClass;
+        $settings->deadline = time() - 1;
+        $settings->noncompletionpenalty = 0;
+        $settings->fraction = 0.5;
+        $this->teameval->update_settings($settings);
+
+        //Note: this includes one result that has been bounds-checked to 100
+        $expected_results = [50.60,44.60,53.00,33.40,24.20,40.20,72.60,43.80,52.50,78.30,100.00,90.00,82.35,86.85,73.80];
 
         foreach(array_map(null, $this->students, $expected_results) as list($user, $expected)) {
             $grade = $this->teameval->adjusted_grade($user->id);
             $this->assertEquals($expected, $grade);
         }
 
+        // Check that bounds checking to 0...100 works
+
+        $settings = new stdClass;
+        $settings->noncompletionpenalty = 0.5;
+        $settings->fraction = 1;
+        $this->teameval->update_settings($settings);
+
+        // 3rd student in Group A should have 2/3 completion rate
+        $group = reset($this->members);
+        $uid = array_keys($group)[2];
+        $completion = $this->teameval->user_completion($uid);
+        $this->assertEquals(2/3, $completion);
+
+        $expected_results = [61.20,49.20,59.33,20.13, 0,10.40,75.20, 0,25.00,76.60,100.00,90.00,29.70,38.70,12.60];
+
+        foreach(array_map(null, $this->students, $expected_results) as list($user, $expected)) {
+            $grade = $this->teameval->adjusted_grade($user->id);
+            $this->assertEquals($expected, $grade, 'Adjusted grade not equal to expected grade with noncompletionpenalty', 0.01);
+        }
+
         // and finally check the adjusted grade of someone not in the group
-        
+
         $notagrade = $this->teameval->adjusted_grade($this->teacher->id);
         $this->assertNull($notagrade);
 

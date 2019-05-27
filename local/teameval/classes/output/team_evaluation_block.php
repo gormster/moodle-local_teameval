@@ -79,7 +79,7 @@ class team_evaluation_block implements renderable {
             } else {
                 $context = $this->context;
             }
-            
+
             $evalcontext = $teameval->get_evaluation_context();
 
             $canview = team_evaluation::check_capability($context, ['local/teameval:viewtemplate']);
@@ -92,7 +92,7 @@ class team_evaluation_block implements renderable {
             $cm = $teameval->get_coursemodule();
 
             // If the user can submit and the teameval is not enabled, then hide it from them.
-            if ($cm && $cansubmit && ($teameval->get_settings()->enabled == false)) {
+            if ($cm && $cansubmit && ($teameval->enabled == false)) {
 
                 $this->disabled = true;
 
@@ -119,7 +119,7 @@ class team_evaluation_block implements renderable {
                     $this->cm = $cm;
 
                     // we actually only need to ever change settings in real team evals
-                
+
                     if ($canchangesettings) {
                         $settings = $teameval->get_settings();
                         $settings->fraction *= 100;
@@ -128,7 +128,7 @@ class team_evaluation_block implements renderable {
 
                         $settingsform = new forms\settings_form();
                         $settingsform->set_data($settings);
-                        
+
                         $this->settings = $settingsform;
                     }
 
@@ -140,7 +140,7 @@ class team_evaluation_block implements renderable {
                     if ($canrelease) {
                         $releases = $DB->get_records('teameval_release', ['cmid' => $cm->id]);
                         $this->release = new release($teameval, $releases);
-                        $this->hiderelease = $teameval->get_settings()->autorelease;
+                        $this->hiderelease = $teameval->autorelease;
                     }
 
                     if ($cansubmit) {

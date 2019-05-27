@@ -3,9 +3,9 @@
 </div>
 {{#js}}
 require(['jquery', 'core/notification', 'core/ajax'], function($, Notification, Ajax) {
-        
+
         $('#delete-button-{{uniqid}}').click(function() {
-                Notification.confirm("{{#str}} confirmdeletetitle, block_teameval_templates {{/str}}", 
+                Notification.confirm("{{#str}} confirmdeletetitle, block_teameval_templates {{/str}}",
                 "{{#str}} confirmdeletequestion, block_teameval_templates {{/str}}",
                 "{{#str}} delete, core {{/str}}",
                 "{{#str}} cancel, core {{/str}}",

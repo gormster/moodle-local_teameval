@@ -57,11 +57,11 @@ class report implements \local_teameval\report {
                 foreach($groupmembers[$gid] as $uid => $user) {
                     $memberinfo = new stdClass;
                     $memberinfo->user = $user;
-                    
+
                     $qi = $r->questioninfo;
                     $resp = $this->teameval->get_response($qi, $uid);
                     $memberinfo->response = $resp;
-                    
+
                     $groupinfo->members[$uid] = $memberinfo;
                 }
 

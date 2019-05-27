@@ -20,7 +20,7 @@ class local_teameval_core_testcase extends advanced_testcase {
 
         // we use assign because it's one of the default implementers
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
-        $this->assign = $generator->create_instance(array('course'=>$this->course->id, 'name' => 'Test Assign'));
+        $this->assign = $generator->create_instance(array('course'=>$this->course->id, 'name' => 'Test Assign', 'duedate' => time() - 3600));
 
         // i guess this counts as a test but we do it every time so put it in setUp
         $this->teameval = team_evaluation::from_cmid($this->assign->cmid);
@@ -86,14 +86,14 @@ class local_teameval_core_testcase extends advanced_testcase {
 
 
         // and now we test the fail condition
-        
-        $this->setExpectedException('coding_exception');
+
+        $this->expectException('coding_exception');
 
         $notateameval = new team_evaluation(null);
     }
 
     public function test_settings() {
-        
+
         // make sure we got our default settings right
         $settings = $this->teameval->get_settings();
 
@@ -147,7 +147,7 @@ class local_teameval_core_testcase extends advanced_testcase {
         $notateameval = new team_evaluation($this->teameval->id + $n);
     }
 
-    /** 
+    /**
      * @expectedException coding_exception
      * @expectedExceptionMessage Undefined
      */
@@ -193,15 +193,20 @@ class local_teameval_core_testcase extends advanced_testcase {
         $this->assertFalse($rslt);
 
         // change it to a past date
-        $settings = new stdClass;
         $settings->deadline = time() - 1;
         $this->teameval->update_settings($settings);
 
         $rslt = $this->teameval->deadline_passed();
         $this->assertTrue($rslt);
 
+        // change it to before minimum_deadline
+        $evalcontext = $this->teameval->get_evaluation_context();
+        $settings->deadline = $evalcontext->minimum_deadline() - 100;
+
+        $this->teameval->update_settings($settings);
+        $this->assertEquals($evalcontext->minimum_deadline(), $this->teameval->deadline);
+
         // unset the deadline
-        $settings = new stdClass;
         $settings->deadline = 0;
         $this->teameval->update_settings($settings);
 

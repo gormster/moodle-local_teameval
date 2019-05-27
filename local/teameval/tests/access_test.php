@@ -34,6 +34,7 @@ class local_teameval_access_testcase extends advanced_testcase {
         $this->course = $this->getDataGenerator()->create_course();
 
         team_evaluation::_clear_groups_members_cache();
+        team_evaluation::_clear_response_cache();
 
         // we use assign because it's one of the default implementers
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
@@ -45,7 +46,7 @@ class local_teameval_access_testcase extends advanced_testcase {
             $group = $this->getDataGenerator()->create_group(['courseid' => $this->course->id]);
             $this->groups[$group->id] = $group;
             $this->members[$group->id] = [];
-         
+
             for($j = 0; $j < 5; $j++) {
                 $user = $this->getDataGenerator()->create_user();
                 $this->students[$user->id] = $user;
@@ -71,7 +72,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
     private function add_questions($numQuestions = 3) {
         global $USER;
-        
+
         for ($i = 0; $i < $numQuestions; $i++) {
             $id = $i + 1;
 
@@ -90,7 +91,10 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $methods = array_merge(['get_question_plugins'], $methods);
 
-        $this->teameval = $this->getMock(team_evaluation::class, $methods, [$teameval->id]);
+        $this->teameval = $this->getMockBuilder(team_evaluation::class)
+                               ->setMethods($methods)
+                               ->setConstructorArgs([$teameval->id])
+                               ->getMock();
 
         $this->teameval->method('get_question_plugins')
             ->willReturn(['mock' => mock_question::mock_question_plugininfo($this)]);
@@ -136,7 +140,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $this->setUser($this->teacher);
 
-        $this->setExpectedException('required_capability_exception');
+        $this->expectException('required_capability_exception');
         team_evaluation::guard_capability($this->teameval, ['local/teameval:submitquestionnaire']);
 
     }
@@ -147,7 +151,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $this->setUser(current($this->students));
 
-        $this->setExpectedException('required_capability_exception');
+        $this->expectException('required_capability_exception');
         team_evaluation::guard_capability($this->teameval, ['local/teameval:createquestionnaire']);
 
     }
@@ -163,7 +167,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $this->assertEquals($context->id, $contextid);
 
-        $this->setExpectedException('required_capability_exception');
+        $this->expectException('required_capability_exception');
 
         $context = team_evaluation::guard_capability($this->teameval, ['local/teameval:submitquestionnaire'], ['doanything' => false]);
 
@@ -191,7 +195,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $this->assertEquals($context->id, $contextid2);
 
-        $this->setExpectedException('invalid_parameter_exception');
+        $this->expectException('invalid_parameter_exception');
 
         $context = team_evaluation::guard_capability(['cmid' => $assign2->cmid], ['local/teameval:createquestionnaire'], ['must_exist' => true]);
 
@@ -204,7 +208,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $this->setUser($this->teacher);
 
-        $this->setExpectedException('invalid_parameter_exception');
+        $this->expectException('invalid_parameter_exception');
 
         $context = team_evaluation::guard_capability(['id' => $this->teameval->id + 1], ['local/teameval:createquestionnaire'], ['must_exist' => true]);
 
@@ -217,7 +221,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $this->setUser($this->teacher);
 
-        $this->setExpectedException('coding_exception');
+        $this->expectException('coding_exception');
 
         $context = team_evaluation::guard_capability(['plumbus' => $this->teameval->id], ['local/teameval:createquestionnaire'], ['must_exist' => true]);
     }
@@ -237,15 +241,15 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $context = team_evaluation::guard_capability(['contextid' => $coursecontext->id], ['local/teameval:createquestionnaire'], ['child_context' => $this->teameval->get_context()]);
 
-        $this->assertEquals($context->id, $this->teameval->get_context()->id);        
+        $this->assertEquals($context->id, $this->teameval->get_context()->id);
 
         // now create a second course, to test the fail condition
-        
+
         $course2 = $this->getDataGenerator()->create_course();
         $course2context = context_course::instance($course2->id);
         $template2 = team_evaluation::new_with_contextid($course2context->id);
 
-        $this->setExpectedException('required_capability_exception');
+        $this->expectException('required_capability_exception');
         $context = team_evaluation::guard_capability($template2, ['local/teameval:createquestionnaire'], ['child_context' => $this->teameval->get_context()]);
 
     }
@@ -264,11 +268,11 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $this->setUser(next($this->students));
 
-        $this->setExpectedException('required_capability_exception');
-        
+        $this->expectException('required_capability_exception');
+
         team_evaluation::guard_capability($usercontext, ['local/teameval:submitquestionnaire']);
     }
-    
+
 
     public function test_should_update_question() {
         global $USER;
@@ -283,7 +287,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         // should work for teacher
         $this->setUser($this->teacher);
-        
+
         $tx = $this->teameval->should_update_question('mock', 0, $USER->id);
         $this->assertNotEmpty($tx);
         // do nothing
@@ -314,7 +318,7 @@ class local_teameval_access_testcase extends advanced_testcase {
         $tx = $this->teameval->should_update_question('mock', 0, $USER->id);
         $this->assertEmpty($tx);
 
-        // should work to update existing questions 
+        // should work to update existing questions
         $tx = $this->teameval->should_update_question('mock', 1, $USER->id);
         $this->assertNotEmpty($tx);
         $tx->transaction->allow_commit();
@@ -338,7 +342,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         // should work for teacher
         $this->setUser($this->teacher);
-        
+
         $tx = $this->teameval->should_delete_question('mock', 1, $USER->id);
         $this->assertNotEmpty($tx);
         $tx->transaction->allow_commit();
@@ -459,7 +463,7 @@ class local_teameval_access_testcase extends advanced_testcase {
         $student = current(end($this->members));
 
         $response = new mock_response($this->teameval, current($this->questions), $student->id);
-        $response->opinions = [1, 2, 3, 4, 5];
+        $response->update_opinions([1, 2, 3, 4, 5]);
 
         // one should be enough
 
@@ -473,6 +477,88 @@ class local_teameval_access_testcase extends advanced_testcase {
         $this->assertEquals(\local_teameval\LOCKED_REASON_MARKED, $reason);
         $this->assertEquals($student->id, $user->id);
 
+    }
+
+    public function test_marks_available() {
+        $this->mock_teameval();
+
+        $this->add_questions(3);
+
+        $group0 = reset($this->groups);
+        $student0 = reset($this->members[$group0->id]);
+
+        // No questions responded, should be false
+        $rslt = $this->teameval->marks_available($student0->id);
+        $this->assertFalse($rslt);
+
+        // Complete one questionnaire
+        foreach ($this->questions as $question) {
+            $response = new mock_response($this->teameval, $question, $student0->id);
+            $response->update_opinions([1, 2, 3, 4, 5]);
+        }
+
+        // Only one group member responded, should be false
+        $rslt = $this->teameval->marks_available($student0->id);
+        $this->assertFalse($rslt);
+
+        foreach ($this->members[$group0->id] as $student) {
+            foreach ($this->questions as $question) {
+                $response = new mock_response($this->teameval, $question, $student->id);
+                $response->update_opinions([1, 2, 3, 4, 5]);
+            }
+        }
+
+        // All group members responded, should be true
+        $rslt = $this->teameval->marks_available($student0->id);
+        $this->assertTrue($rslt);
+
+        $settings = new stdClass();
+        $settings->autorelease = false;
+        $this->teameval->update_settings($settings);
+
+        // Marks made unreleased, should be false
+        $rslt = $this->teameval->marks_available($student0->id);
+        $this->assertFalse($rslt);
+
+        // Turn autorelease back on for these next tests
+        $settings->autorelease = true;
+        $this->teameval->update_settings($settings);
+
+        // Partial completion for group 1
+        $group1 = next($this->groups);
+        $student10 = current($this->members[$group1->id]);
+        $student11 = next($this->members[$group1->id]);
+
+        foreach ($this->questions as $question) {
+            $response = new mock_response($this->teameval, $question, $student10->id);
+            $response->update_opinions([1, 2, 3, 4, 5]);
+
+            $response = new mock_response($this->teameval, $question, $student11->id);
+            $response->update_opinions([1, 2, 3, 4, 5]);
+        }
+
+        // Partial completion, no deadline = no release
+        $rslt = $this->teameval->marks_available($student10->id);
+        $this->assertFalse($rslt);
+
+        $settings->deadline = time() - 1;
+        $this->teameval->update_settings($settings);
+
+        // Deadline passed, should be true
+        $rslt = $this->teameval->marks_available($student10->id);
+        $this->assertTrue($rslt);
+
+        // No completion for group 2
+        $group2 = next($this->groups);
+        $student20 = current($this->members[$group2->id]);
+
+        // Deadline passed, should still be true
+        $rslt = $this->teameval->marks_available($student10->id);
+        $this->assertTrue($rslt);
+
+        // Teacher shouldn't have marks available
+        $rslt = $this->teameval->marks_available($this->teacher->id);
+        $this->assertFalse($rslt);
     }
 
 }

@@ -10,7 +10,7 @@
 {{#editable}}
 {{#js}}{{#_notset}}<script>{{/_notset}}
 require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
-        
+
         $('#template-title-{{uniqid}} input').on('input', function() {
                 $('#template-title-{{uniqid}} button').prop('disabled', ($(this).val().trim().length == 0));
         });

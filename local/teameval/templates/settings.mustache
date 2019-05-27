@@ -15,7 +15,7 @@ require(['jquery', 'local_teameval/ajaxforms'], function($, ajaxforms) {
     settingsButton.click(function() {
         container.toggle();
     });
-    
+
     var form = container.find('form');
     ajaxforms.ajaxify(form, function (promise) {
         var saveButton = container.find('input[type=submit]');

@@ -17,6 +17,10 @@ class mock_evaluation_context extends evaluation_context {
         return !empty($this->uservisible[$userid]);
     }
 
+    public function default_deadline() {
+        return time();
+    }
+
     public function group_for_user($userid) {
         return current(groups_get_all_groups($this->cm->course, $userid, $this->cm->groupingid));
     }

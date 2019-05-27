@@ -18,10 +18,10 @@ class download_template implements renderable, templatable {
 
     public function __construct(team_evaluation $teameval) {
         $this->download = moodle_url::make_pluginfile_url(
-            $teameval->get_context()->id, 
-            'local_teameval', 
-            'template', 
-            $teameval->id, 
+            $teameval->get_context()->id,
+            'local_teameval',
+            'template',
+            $teameval->id,
             '/', $teameval->template_file_name());
     }
 

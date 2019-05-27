@@ -75,7 +75,7 @@ class external extends external_api {
     }
 
     public static function submit_response($teamevalid, $id, $comments) {
-        global $DB, $USER;
+        global $USER;
 
         team_evaluation::guard_capability($teamevalid, ['local/teameval:submitquestionnaire'], ['doanything' => false]);
 
@@ -94,6 +94,8 @@ class external extends external_api {
             }
 
             $response->update_comments($formdata);
+
+            $teameval->did_submit_response('comment', $id, $USER->id);
         }
     }
 }

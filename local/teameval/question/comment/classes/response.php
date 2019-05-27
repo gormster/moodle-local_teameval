@@ -14,17 +14,21 @@ class response implements \local_teameval\response_feedback {
 
     protected $comments;
 
-    public function __construct(\local_teameval\team_evaluation $teameval, $question, $userid) {
+    public function __construct(\local_teameval\team_evaluation $teameval, $question, $userid, $comments = null) {
         global $DB;
 
         $this->userid = $userid;
         $this->question = $question;
         $this->teameval = $teameval;
 
-        $comments = $DB->get_records('teamevalquestion_comment_res', ['fromuser' => $userid, 'questionid' => $question->id]);
-        $this->comments = [];
-        foreach ($comments as $comment) {
-            $this->comments[$comment->touser] = $comment;
+        if (is_null($comments)) {
+            $comments = $DB->get_records('teamevalquestion_comment_res', ['fromuser' => $userid, 'questionid' => $question->id]);
+            $this->comments = [];
+            foreach ($comments as $comment) {
+                $this->comments[$comment->touser] = $comment;
+            }
+        } else {
+            $this->comments = $comments;
         }
 
         $this->fix_responses();
@@ -59,7 +63,7 @@ class response implements \local_teameval\response_feedback {
 
     public function comment_on($userid) {
         if (isset($this->comments[$userid])) {
-            return $this->comments[$userid]->comment;    
+            return $this->comments[$userid]->comment;
         }
         return null;
     }
@@ -86,7 +90,7 @@ class response implements \local_teameval\response_feedback {
 
     public function feedback_for_readable($userid) {
         $comment = $this->comment_on($userid);
-        
+
         return new output\feedback_readable($this->userid, $userid, $comment);
     }
 

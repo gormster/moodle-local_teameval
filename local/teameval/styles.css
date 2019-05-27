@@ -202,15 +202,6 @@ li.local-teameval-template-search-result .subtitle {
         border-radius: 5px;
     }
 
-    #local-teameval-questions .local-teameval-question .ui-blocker {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        background-color: hsla(0, 0%, 70%, 0.3);
-    }
-
     #local-teameval-questions .local-teameval-question.incomplete {
         background-color: rgba(255, 100, 100, 0.1);
         border: 1px solid rgba(128, 60, 60, 0.8);
@@ -289,6 +280,10 @@ li.local-teameval-template-search-result .subtitle {
     text-align: center;
 }
 
+.local-teameval-release-container .release-all-info {
+    text-align: center;
+}
+
 .local-teameval-release-container .group header {
     margin: 10px 0;
 }
@@ -332,7 +327,7 @@ li.local-teameval-template-search-result .subtitle {
     transition: border 0.2s, background 0.2s, box-shadow 0.2s;
     -webkit-transition: border 0.2s, background 0.2s, box-shadow 0.2s;
 }
-    
+
     .local-teameval-switch.checked {
         border: 1px solid #333;
         background-color: rgb(59, 235, 59);
@@ -342,7 +337,7 @@ li.local-teameval-template-search-result .subtitle {
     .local-teameval-switch.tristate.rejected {
         border: 1px solid #333;
         background-color: rgb(235, 59, 59);
-        box-shadow: rgb(25, 201, 25);   
+        box-shadow: rgb(25, 201, 25);
     }
 
     .local-teameval-switch.overridden-checked {
@@ -422,7 +417,7 @@ li.local-teameval-template-search-result .subtitle {
 }
 
 
-/* 
+/*
 this is stupidly generic. where am i using it?
 
 .right {

@@ -4,6 +4,7 @@ namespace local_teameval\forms;
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_teameval\team_evaluation;
 use moodleform;
 
 class settings_form extends ajaxform {
@@ -41,6 +42,27 @@ class settings_form extends ajaxform {
 
         $mform->addElement('submit', 'submit', get_string('save', 'local_teameval'));
 
+    }
+
+    public function definition_after_data() {
+
+        $mform = $this->_form;
+        $id = $mform->getElementValue('id');
+
+        if (team_evaluation::exists($id)) {
+            $teameval = new team_evaluation($id);
+            $evalcontext = $teameval->get_evaluation_context();
+
+            if ($evalcontext) {
+                $val = $mform->getElementValue('deadline');
+                $mform->removeElement('deadline');
+
+                $deadline = $mform->createElement('date_time_selector', 'deadline', get_string('deadline', 'local_teameval'), ['optional' => true, 'defaulttime' => $evalcontext->default_deadline()]);
+                $deadline->setValue($val);
+                $mform->insertElementBefore($deadline, 'submit');
+
+            }
+        }
     }
 
 }

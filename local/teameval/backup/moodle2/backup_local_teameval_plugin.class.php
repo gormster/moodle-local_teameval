@@ -38,11 +38,11 @@ class backup_local_teameval_plugin extends backup_local_plugin {
         if ($userinfo) {
 
             $releases = new backup_nested_element('releases');
-            
+
             $all = new backup_nested_element('release_all', null, ['target']);
             $group = new backup_nested_element('release_group', null, ['target']);
             $user = new backup_nested_element('release_user', null, ['target']);
-            
+
             $releases->add_child($all);
             $releases->add_child($group);
             $releases->add_child($user);
@@ -103,7 +103,7 @@ class backup_local_teameval_plugin extends backup_local_plugin {
         $this->add_subplugin_structure('teamevalquestion', $question, true, 'local', 'teameval');
 
         // templates don't have userdata so we are DONE.
-        
+
         return $plugin;
 
     }
@@ -137,7 +137,7 @@ class backup_local_teameval_plugin extends backup_local_plugin {
         $this->add_subplugin_structure('teamevalquestion', $question, true, 'local', 'teameval');
 
         // templates don't have userdata so we are DONE.
-        
+
         return $plugin;
 
     }
@@ -152,7 +152,7 @@ class backup_local_teameval_plugin extends backup_local_plugin {
 
     protected function add_subplugin_structure($subplugintype, $element, $multiple, $plugintype = null, $pluginname = null) {
         global $CFG;
-        
+
         // Check the requested plugintype is a valid one.
         if (!array_key_exists($plugintype, core_component::get_plugin_types())) {
              throw new backup_step_exception('incorrect_plugin_type', $plugintype);

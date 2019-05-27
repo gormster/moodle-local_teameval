@@ -26,7 +26,7 @@ class edit_form extends ajaxform {
         $mform->setDefault('anonymous', false);
 
         $mform->addElement('advcheckbox', 'optional', get_string('optional', 'teamevalquestion_comment'), null, null, [false, true]);
-        $mform->setDefault('optional', false);        
+        $mform->setDefault('optional', false);
 
         if (!empty($this->_customdata['locked'])) {
             $mform->freeze(['anonymous', 'optional']);

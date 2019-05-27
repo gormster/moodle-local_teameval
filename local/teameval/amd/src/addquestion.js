@@ -3,12 +3,12 @@
  * @copyright  2015 Morgan Harris
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
- 
+
  /**
   * Add question button for teameval blocks
   * @module local_teameval/addquestion
   */
-define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/notification'], 
+define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/notification'],
     function($, ui, str, templates, ajax, notification) {
 
     "use strict";
@@ -87,7 +87,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
             var d = $.Deferred();
             require(['teamevalquestion_'+type+'/question'], function(QuestionClass) {
-                var qObject = new QuestionClass(questionContainer, _id, _contextid, _self, true, questionID, context);
+                var qObject = new QuestionClass(questionContainer, _id, _contextid, _self, true, false, questionID, context);
                 questionContainer.data("question", qObject);
                 d.resolve(question);
             });
@@ -148,7 +148,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             var questionContainer = question.find('.question-container');
 
             var questionObject = questionContainer.data("question");
-            
+
             questionObject.editingView().done(function() {
 
                 question.addClass('editing');
@@ -189,7 +189,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             questionObject.submissionView().done(function() {
 
                 question.removeClass('editing');
-                
+
                 question.find('.local-teameval-save-cancel-buttons').hide();
                 question.find('.local-teameval-question-actions').show();
 
@@ -214,10 +214,10 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
         },
 
         setOrder: function() {
-            var order = $("#local-teameval-questions li").map(function() {
-                return {type: $(this).data('questiontype'), id: $(this).data('questionid')};
-            }).filter(function() {
-                return this !== undefined;
+            var order = $("#local-teameval-questions li").map(function(i, el) {
+                return {type: $(el).data('questiontype'), id: $(el).data('questionid')};
+            }).filter(function(i, el) {
+                return el !== undefined;
             }).get();
 
             var promises = ajax.call([{
@@ -229,7 +229,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             }]);
 
             promises[0].done(function() {
-                
+
             }).fail(notification.exception);
         },
 
@@ -306,8 +306,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
             // add the controls to the questions already in the block
 
-            $('#local-teameval-questions .local-teameval-question').each(function() {
-                _this.addEditingControls($(this));
+            $('#local-teameval-questions .local-teameval-question').each(function(i, el) {
+                _this.addEditingControls($(el));
             });
 
             templateIO.find('.template-download').click(function() {
@@ -376,11 +376,6 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
                     _templatePreviewFunction();
                 });
 
-                _searchBar.change(function() {
-                    _templateAddButton.prop('disabled', true);
-                    _templatePreviewFunction();
-                });
-
                 _searchBar.autocomplete( "instance" )._renderItem = options.autocompleteRenderFunction;
 
                 // SET UP TEMPLATE DOWNLOAD
@@ -415,7 +410,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
                     _initialised = $.Deferred();
                 }
                 _initialised.resolve();
-                
+
 
             }
 

@@ -80,7 +80,7 @@ trait update_from_form {
 
     // ---
     // Don't override these methods
-    // ---   
+    // ---
 
     public static function update_question_parameters() {
         return new external_function_parameters([

@@ -17,7 +17,12 @@ class evaluator implements \local_teameval\evaluator {
 
     }
 
+    private $_scores;
     public function scores() {
+
+        if (isset($this->_scores)) {
+            return $this->_scores;
+        }
 
         $user_opinions = [];
 
@@ -41,9 +46,9 @@ class evaluator implements \local_teameval\evaluator {
 
         foreach($user_opinions as $userid => $opinions) {
             if (count($opinions) == 0) {
-                continue; 
+                continue;
             }
-            
+
             $max_scores[$userid] = [];
 
             foreach($opinions as $question => $scores) {
@@ -92,7 +97,7 @@ class evaluator implements \local_teameval\evaluator {
 
         foreach($user_opinions as $userid => $opinions) {
             if (count($opinions) == 0) {
-                continue; 
+                continue;
             }
 
             foreach($opinions as $question => $scores) {
@@ -119,6 +124,8 @@ class evaluator implements \local_teameval\evaluator {
             $question_count = count($user_marked_count[$markeduser]);
             $final_scores[$markeduser] = $score / $question_count;
         }
+
+        $this->_scores = $final_scores;
 
         return $final_scores;
 

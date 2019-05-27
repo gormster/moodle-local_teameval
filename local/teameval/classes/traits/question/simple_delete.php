@@ -29,7 +29,7 @@ trait simple_delete {
 
     // ---
     // Don't override these methods
-    // ---   
+    // ---
 
     public static function delete_question_parameters() {
         return new external_function_parameters([
@@ -43,8 +43,8 @@ trait simple_delete {
     }
 
     public static function delete_question($teamevalid, $id) {
-        global $USER, $DB;
-        
+        global $USER;
+
         team_evaluation::guard_capability($teamevalid, ['local/teameval:createquestionnaire']);
 
         $teameval = new team_evaluation($teamevalid);
@@ -58,7 +58,7 @@ trait simple_delete {
 
             $teameval->delete_question($transaction);
         } else {
-            throw required_capability_exception($teameval->get_context(), 'local/teameval:createquestionnaire', 'nopermissions');
+            throw new \required_capability_exception($teameval->get_context(), 'local/teameval:createquestionnaire', 'nopermissions');
         }
     }
 }

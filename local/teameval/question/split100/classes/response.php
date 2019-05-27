@@ -19,7 +19,7 @@ class response implements \local_teameval\response {
 
     protected $_marks_given;
 
-    public function __construct(team_evaluation $teameval, $question, $userid) {
+    public function __construct(team_evaluation $teameval, $question, $userid, $records = null) {
         global $DB;
 
         $this->teameval = $teameval;
@@ -27,7 +27,11 @@ class response implements \local_teameval\response {
         $this->userid = $userid;
 
         $this->splits = [];
-        $records = $DB->get_records('teamevalquestion_split100_rs', ['questionid' => $question->id, 'fromuser' => $userid]);
+
+        if (is_null($records)) {
+            $records = $DB->get_records('teamevalquestion_split100_rs', ['questionid' => $question->id, 'fromuser' => $userid]);
+        }
+
         if (count($records) == 0) {
             $this->_marks_given = false;
         } else {
@@ -109,7 +113,7 @@ class response implements \local_teameval\response {
                 $pct = (100 - $total) / count($missing);
 
                 foreach ($missing as $userid => $user) {
-                    $this->splits[$userid] = $pct;                    
+                    $this->splits[$userid] = $pct;
                 }
 
             } else if ($total != 100) {

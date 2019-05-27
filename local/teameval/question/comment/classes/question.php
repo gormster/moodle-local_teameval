@@ -8,8 +8,8 @@ use renderer_base;
 use local_teameval\team_evaluation;
 
 use local_teameval\traits;
-    
-class question implements \local_teameval\question {
+
+class question implements \local_teameval\question_response_preparing {
 
     use traits\question\no_value;
 
@@ -48,8 +48,9 @@ class question implements \local_teameval\question {
         }
     }
 
+    private static $name_keys = ["title", "description", "anonymous", "optional"];
     public function __get($name) {
-        if (in_array($name, ["title", "description", "anonymous", "optional"])) {
+        if (in_array($name, self::$name_keys)) {
             $priv = "_$name";
             return $this->$priv;
         }
@@ -66,8 +67,8 @@ class question implements \local_teameval\question {
 
     public function edit_form_data() {
         $data = [
-            'id' => $this->id, 
-            'title' => $this->title, 
+            'id' => $this->id,
+            'title' => $this->title,
             'description' => ['text' => $this->description, 'format' => FORMAT_HTML],
         ];
         if ($this->anonymous) $data['anonymous'] = true;
@@ -77,7 +78,7 @@ class question implements \local_teameval\question {
 
     public function context_data(renderer_base $output, $locked = false) {
         $context = new stdClass;
-        
+
         if (team_evaluation::check_capability($this->teameval, ['local/teameval:createquestionnaire'])) {
             $context->editingcontext = $this->edit_form_data();
             $context->editinglocked = $this->any_response_submitted();
@@ -87,7 +88,7 @@ class question implements \local_teameval\question {
         }
 
         return $context;
-        
+
     }
 
     public function any_response_submitted() {
@@ -117,6 +118,37 @@ class question implements \local_teameval\question {
 
     public static function supported_renderer_subtypes() {
         return ['plaintext'];
+    }
+
+    protected $response_data = [];
+    public function prepare_responses($users) {
+        global $DB;
+
+        $unprepared = array_diff_key($users, $this->response_data);
+
+        if (empty($unprepared)) {
+            return;
+        }
+
+        // prepare_responses might be called more than once
+        foreach ($unprepared as $uid => $_) {
+            $this->response_data[$uid] = [];
+        }
+
+        list($sql, $params) = $DB->get_in_or_equal(array_keys($unprepared), SQL_PARAMS_NAMED, 'user');
+        $recordset = $DB->get_recordset_select("teamevalquestion_comment_res", "questionid = :questionid AND fromuser $sql", ["questionid" => $this->id] + $params);
+
+        foreach ($recordset as $record) {
+            $this->response_data[$record->fromuser][$record->touser] = $record;
+        }
+
+    }
+
+    public function get_response($userid) {
+        if (isset($this->response_data[$userid])) {
+            return new response($this->teameval, $this, $userid, $this->response_data[$userid]);
+        }
+        return new response($this->teameval, $this, $userid);
     }
 
     public static function delete_questions($ids) {

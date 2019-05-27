@@ -57,11 +57,11 @@ define(['jquery'], function($) {
 '           transform="rotate(-270 0.5 0.5)" style="opacity: 0.5" />' +
 '       <rect x="0.45" y="0" width="0.1" height="0.37" rx="0.05" ry="0.05" ' +
 '           transform="rotate(-315 0.5 0.5)" style="opacity: 0.4" />' +
-'       <animateTransform attributeName="transform" attributeType="XML" ' + 
+'       <animateTransform attributeName="transform" attributeType="XML" ' +
 '           type="rotate" from="0 0.5 0.5" to="360 0.5 0.5" dur="1.5s" repeatCount="indefinite"/>' +
 '    </g>' +
 '</svg>' +
-'</div>'); 
+'</div>');
 
             if (tristate) {
                 o.append('<svg class="reject" height="8" viewBox="0 0 10 10"><path d="M 1 1 L 8 8 M 1 8 L 8 1" /></svg>');
@@ -100,7 +100,7 @@ define(['jquery'], function($) {
 
                         var offsetX = evt.pageX - o.offset().left;
 
-                        
+
                         if (offsetX < o.width() / 2) {
                             newState = 'rejected';
                         } else {
@@ -165,7 +165,7 @@ define(['jquery'], function($) {
                 if (source == 'override') {
                     overrideSubswitches(o, newState);
                 }
-                
+
 
             });
 
@@ -180,7 +180,7 @@ define(['jquery'], function($) {
             var changed = false;
 
             $.each(overrides, function(k, os) {
-            
+
                 var state = os[0].data('state');
                 for (var i = os.length - 1; i >= 0; i--) {
                     var o = os[i];

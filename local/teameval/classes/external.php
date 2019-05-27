@@ -35,7 +35,10 @@ class external extends external_api {
     }
 
     public static function turn_on($cmid) {
-        team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:changesettings']);
+        global $PAGE;
+        $context = team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:changesettings']);
+        $PAGE->set_context($context);
+
         $teameval = team_evaluation::from_cmid($cmid);
         $settings = new stdClass;
         $settings->enabled = true;
@@ -49,7 +52,7 @@ class external extends external_api {
             'cmid' => new external_value(PARAM_INT, 'coursemodule id for the teameval')
         ]);
     }
-    
+
     public static function get_settings_returns() {
         return new external_single_structure([
             'enabled' => new external_value(PARAM_BOOL, 'is teameval enabled for this module'),
@@ -70,7 +73,7 @@ class external extends external_api {
 
     public static function update_settings_parameters() {
         global $PAGE; // we need to set the context to construct a moodleform
-        $PAGE->set_context(context_system::instance()); 
+        $PAGE->set_context(context_system::instance());
 
         $settingsform = new \local_teameval\forms\settings_form;
         return $settingsform->external_parameters();
@@ -81,7 +84,6 @@ class external extends external_api {
         $PAGE->set_context(context_system::instance());
 
         $settingsform = new \local_teameval\forms\settings_form;
-        error_log(print_r($settingsform->returns(), true));
         return $settingsform->returns();
     }
 
@@ -127,9 +129,40 @@ class external extends external_api {
     }
 
     public static function questionnaire_set_order($id, $order) {
-        team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
+        global $PAGE;
+        $context = team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
+        $PAGE->set_context($context);
+
         $teameval = new team_evaluation($id);
         $teameval->questionnaire_set_order($order);
+    }
+
+    /* questionnaire_submitted */
+
+    public static function questionnaire_submitted_parameters() {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'coursemodule id for teameval')
+        ]);
+    }
+
+    public static function questionnaire_submitted_returns() {
+        return null;
+    }
+
+    public static function questionnaire_submitted($cmid) {
+        global $USER, $PAGE;
+
+        $context = team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:submitquestionnaire'], ['must_exist' => true, 'doanything' => false]);
+
+        $PAGE->set_context($context);
+
+        $teameval = team_evaluation::from_cmid($cmid);
+
+        if ($teameval->marks_available($USER->id)) {
+            //trigger a grade update for this user's group
+            $users = $teameval->teammates($USER->id, true);
+            $teameval->get_evaluation_context()->trigger_grade_update(array_keys($users));
+        }
     }
 
     /* report */
@@ -150,7 +183,7 @@ class external extends external_api {
     }
 
     public static function report($cmid, $plugin) {
-        global $USER, $PAGE;
+        global $PAGE;
 
         $context = team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:viewallteams'], ['must_exist' => true]);
 
@@ -199,14 +232,18 @@ class external extends external_api {
     }
 
     public static function release($cmid, $release) {
-        team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:invalidateassessment'], ['must_exist' => true]);
+        global $PAGE;
+
+        $context = team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:invalidateassessment'], ['must_exist' => true]);
+
+        $PAGE->set_context($context);
 
         $teameval = team_evaluation::from_cmid($cmid);
 
         foreach($release as $r) {
-            $teameval->release_marks_for($r['target'], $r['level'], $r['release']);    
+            $teameval->release_marks_for($r['target'], $r['level'], $r['release']);
         }
-        
+
     }
 
     /* get_release */
@@ -222,15 +259,16 @@ class external extends external_api {
             new external_single_structure([
                 'level' => new external_value(PARAM_INT, 'release level'),
                 'target' => new external_value(PARAM_INT, 'target of release'),
-                'release' => new external_value(PARAM_BOOL, 'set or unset release')
             ])
         );
     }
 
     public static function get_release($cmid) {
-        global $DB;
+        global $DB, $PAGE;
 
-        team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:viewallteams'], ['must_exist' => true]);
+        $context = team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:viewallteams'], ['must_exist' => true]);
+
+        $PAGE->set_context($context);
 
         return array_values($DB->get_records('teameval_release', ['cmid' => $cmid]));
     }
@@ -259,7 +297,7 @@ class external extends external_api {
     }
 
     public static function template_search($id, $term) {
-        global $DB, $PAGE;
+        global $PAGE;
 
         $context = team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
 
@@ -281,15 +319,13 @@ class external extends external_api {
                 try {
                     team_evaluation::guard_capability($result->objectid, ['local/teameval:viewtemplate'], ['child_context' => $context]);
 
-                    error_log("check passed");
-
                     $teameval = new team_evaluation($result->objectid);
                     $numqs = $teameval->num_questions();
                     $tags = $result->tags;
                     $results[] = [
                         'title' => $teameval->get_title(),
-                        'id' => $teameval->id, 
-                        'from' => $teameval->get_context()->get_context_name(), 
+                        'id' => $teameval->id,
+                        'from' => $teameval->get_context()->get_context_name(),
                         'tags' => $tags,
                         'numqs' => $numqs
                     ];
@@ -332,7 +368,7 @@ class external extends external_api {
     }
 
     public static function add_from_template($from, $to) {
-        global $USER, $PAGE;
+        global $PAGE;
 
         $childcontext = team_evaluation::guard_capability($to, ['local/teameval:createquestionnaire'], ['must_exist' => true]);
         team_evaluation::guard_capability($from, ['local/teameval:viewtemplate'], ['child_context' => $childcontext, 'must_exist' => true]);

@@ -1,6 +1,6 @@
 /* jshint shadow: true */
-define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formparse', 'core/ajax'], 
-    function(Question, $, Strings, FormParse, Ajax) {
+define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formparse', 'local_teameval/editor'],
+    function(Question, $, Strings, FormParse, Editor) {
 
     // 5% width = 0% score
     var MIN_SIZE = 5;
@@ -36,17 +36,17 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
         });
 
         fixFirst = fixFirst || [];
-        
+
         var sum = sumToIndex(fixed);
-        
+
         if (sum != 100) {
-            
+
             var difference = sum - 100;
-            
+
             var mapped = percents.map(function(v, i) {
                 return {i: i, v: v};
             });
-            
+
             var corrector = (difference < 0) ? 1 : -1;
             // sort by the difference between the actual values and the corrected fixed values
             // we want the numbers which will be made *more* accurate by correcting them
@@ -66,16 +66,15 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
                 fixed[index] += corrector;
             }
         }
-        
+
         return fixed;
     }
 
     // ----- Class definition
 
-    function Split100Question(container, teameval, contextid, self, editable, questionID, context) {
+    function Split100Question(container, teameval, contextid, self, editable, optional, questionID, context) {
         Question.apply(this, arguments);
         this.self = self;
-
         this.context = context || {};
         this.pluginName = "split100";
 
@@ -148,7 +147,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
     };
 
     Split100Question.prototype.updateView = function(movingIndices) {
-        
+
         if (!this.context) {
             // no context? can't display.
             return;
@@ -173,7 +172,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
         this.sizes = this.sizes.map(function(v) {
             return Math.max(v, MIN_SIZE);
         });
-        
+
         var sum = sumToIndex(this.sizes);
         var realValues = this.sizes.map(this.displayToReal, this);
         if (sum != 100) {
@@ -186,7 +185,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
         }
 
         var displayValues = fixDisplayValues(realValues, movingIndices);
-        
+
         var splits = split100.children('.split');
         var handles = split100.children('.handle');
         var partialSum = 0;
@@ -202,9 +201,9 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
                     .html(displayValues[i] + '%');
             partialSum += size;
             handles.eq(i).css('left', partialSum + '%');
-            
+
             var split = splits.get(i);
-            
+
             if ((split.scrollWidth > split.clientWidth)
                     || (split.scrollHeight > split.clientHeight)) {
                 $(split).find('.split-label .name').hide();
@@ -232,7 +231,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
         split100.on('mousedown touchstart', '.handle', function(evt) {
             if (!moving) {
                 evt.preventDefault();
-                
+
                 moving = $(evt.target);
                 movingIndex = $(evt.delegateTarget).children('.handle').index(moving);
                 offset = $(evt.delegateTarget).offset();
@@ -264,16 +263,16 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
                 }
 
                 if (pageX === undefined) {
-                    // got an invalid or unrelated event. do nothing. 
+                    // got an invalid or unrelated event. do nothing.
                     return;
                 }
-                
+
                 var target = ((pageX - offset.left) / width) * 100;
-                
+
                 var leftSum = sumToIndex(this.sizes, movingIndex + 1);
-                
+
                 var shift = target - leftSum;
-                
+
                 var leftIndex = movingIndex;
                 var rightIndex = movingIndex + 1;
 
@@ -287,7 +286,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
                         }
                     }
                 }
-                
+
                 if (shift > 0) {
                     rightIndex = null;
                     for (var i = movingIndex + 1; i < this.sizes.length; i++) {
@@ -297,13 +296,13 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
                         }
                     }
                 }
-                
+
                 // If either index is not defined, we're pushing up against the end of the bar
                 if ((leftIndex !== null) && (rightIndex !== null)) {
                     this.sizes[leftIndex] += shift;
                      this.sizes[rightIndex] -= shift;
                 }
-                
+
                 this.updateView([leftIndex, rightIndex]);
             }
         }.bind(this))
@@ -339,6 +338,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
 
     Split100Question.prototype.save = function(ordinal) {
         var form = this.container.find('form');
+        Editor.saveAll(form);
 
         var data = FormParse.serializeObject(form);
         this.context.title = data.title;
@@ -346,31 +346,38 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
 
         var strs = [this.self ? 'yourself' : 'exampleuser', 'exampleuser', 'exampleuser', 'exampleuser'].map(function(v, i) {
             return {key: v, component: 'teamevalquestion_split100', param: this.self ? i : i + 1};
-        });
+        }, this);
 
         var valuePromise = Strings.get_strings(strs).then(function(s) {
             var pcts = [20, 10, 15, 55];
-            this.users = s.map(function(v, i) {
+            var widths = [21, 13, 17, 49];
+            var lefts = [0, 21, 34, 51];
+            this.context.users = s.map(function(v, i) {
                 return {
                     name: v,
                     id: -i,
-                    pct: pcts[i]
+                    pct: pcts[i],
+                    width: widths[i],
+                    left: lefts[i],
+                    rounded: pcts[i],
+                    first: (i === 0),
+                    self: (this.self ? i === 0 : false)
                 };
-            });
-        });
+            }.bind(this));
+        }.bind(this));
 
         var savePromise = this.saveForm(form, ordinal);
 
         return $.when(valuePromise, savePromise);
     };
 
-    Split100Question.prototype.submit = function() {
+    Split100Question.prototype.submit = function(call) {
         if (!this.sizes) {
             // we've never moved the sliders, so don't bother sending anything
-            var deferred = $.Deferred();
-            deferred.resolve();
-            return deferred;
+            call();
+            return true;
         }
+
         var percents = [];
         for (var i = this.context.users.length - 1; i >= 0; i--) {
             var user = this.context.users[i];
@@ -385,12 +392,12 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
             percents: percents
         };
 
-        var promises = Ajax.call([{
+        call({
             methodname: 'teamevalquestion_split100_submit_response',
             args: data
-        }]);
+        });
 
-        return promises[0];
+        return true;
     };
 
     return Split100Question;

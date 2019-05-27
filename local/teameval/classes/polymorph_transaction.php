@@ -19,14 +19,14 @@ class polymorph_transaction {
         $this->id = $id;
         $this->querytype = $querytype;
     }
-    
+
     public function __get($name) {
         return $this->$name;
     }
 
     public function __set($name, $value) {
         if ($name == 'id') {
-            if ($this->querytype == SQL_QUERY_INSERT && empty($id)) {
+            if ($this->querytype == SQL_QUERY_INSERT && empty($this->id)) {
                 $this->id = $value;
             } else {
                 throw new coding_exception('Cannot update ID if already set or on non-insert transaction '.$name);

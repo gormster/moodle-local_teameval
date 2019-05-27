@@ -9,10 +9,19 @@ define(['jquery', 'local_teameval/langen'], function($, LanGen) { return {
         var randomiseButton = $('<button type="button">Randomise</button>');
         randomiseButton.click(function() {
             //randomise likert responses
-            $('.teamevalquestion-likert-question-submission table.responses tbody tr').each(function() {
+            $('.teamevalquestion-likert-question-submission table.responses.grid tbody tr').each(function() {
                 var things = $(this).find('input');
                 var rando = Math.floor(Math.random()*things.length);
                 $(things[rando]).prop('checked', true);
+            });
+
+            $('.teamevalquestion-likert-question-submission table.responses.waterfall').each(function() {
+                var peeps = $(this).find('thead th:not(.criteria)').length;
+                var things = $(this).find('tbody tr').length;
+                for(var i = 0; i < peeps; i++) {
+                    var rando = Math.floor(Math.random()*things);
+                    $(this).find('tbody tr').eq(rando).find('input[type=radio]').eq(i).prop('checked',true);
+                }
             });
 
             $('.teamevalquestion-comment-container table.comments textarea').each(function() {

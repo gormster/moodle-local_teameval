@@ -3,7 +3,7 @@
 $string['pluginname'] = 'Feedback';
 $string['rejectrelease'] = 'Reject / Release';
 $string['rejectrelease_help'] = <<<HTML
-If you've included questions with feedback (such as the comment question), then you might want to review your students' feedback before releasing it. These switches allow you to do just that.
+It is recommended that questions with feedback (<i>Comment</i> question type) be reviewed before the responses are released. These switches allow you to do just that.
 
 Setting the switch to the red cross rescinds feedback. You can rescind at the group level, the user level, the question level, or individual comments. Basically, if you see something inappropriate, set the switch to red.
 

@@ -43,7 +43,7 @@ if ($contextid == 0) {
     }
 }
 
-$title = $teameval->get_settings()->title;
+$title = $teameval->title;
 
 // Set up the page.
 $url = new moodle_url("/blocks/teameval_templates/template.php");

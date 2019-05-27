@@ -11,10 +11,12 @@ class scores_report implements \renderable, \templatable {
     public $scores;
 
     public function __construct($data) {
+        global $DB;
         $display_scores = [];
 
+        $users = $DB->get_records_list('user', 'id', array_keys($data), '', user_picture::fields());
         foreach($data as $userid => $datum) {
-            $user = core_user::get_user($userid, user_picture::fields());
+            $user = $users[$userid];
             $c = clone $datum;
             $c->user = $user;
             $display_scores[] = $c;

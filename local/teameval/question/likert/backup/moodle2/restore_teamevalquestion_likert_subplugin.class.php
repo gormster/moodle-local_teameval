@@ -4,7 +4,7 @@ class restore_teamevalquestion_likert_subplugin extends restore_subplugin {
 
     protected function define_question_subplugin_structure() {
         try {
-            $userinfo = $this->get_setting_value('userinfo');	
+            $userinfo = $this->get_setting_value('userinfo');
         } catch (base_plan_exception $e) {
             $userinfo = false;
         }
@@ -49,8 +49,6 @@ class restore_teamevalquestion_likert_subplugin extends restore_subplugin {
     //TODO: if restore failed and teameval_questions was not updated, delete these rows
 
     public function after_restore_question() {
-        global $DB;
-        
     }
 
 }

@@ -123,7 +123,7 @@ function xmldb_local_teameval_upgrade($oldversion) {
 
         // Launch change of nullability for field cmid.
         $dbman->change_field_notnull($table, $field);
-        
+
 
         $index = new xmldb_index('idx_cmid', XMLDB_INDEX_NOTUNIQUE, array('cmid'));
 

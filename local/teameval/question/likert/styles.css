@@ -9,7 +9,7 @@
     margin-top: 5px;
 }
 
-.teamevalquestion-likert-question-submission .responses th, 
+.teamevalquestion-likert-question-submission .responses th,
 .teamevalquestion-likert-question-submission .responses td {
     text-align: center;
     padding: 5px;
@@ -48,7 +48,7 @@
 }
 
 /* don't border the criteria box */
-.teamevalquestion-likert-question-submission .responses thead tr:nth-last-child(2) th, 
+.teamevalquestion-likert-question-submission .responses thead tr:nth-last-child(2) th,
 .teamevalquestion-likert-question-submission .responses thead tr:nth-last-child(2) td.remaining {
     border-bottom: none;
 }
@@ -60,7 +60,8 @@
 /* alternate colors for marked users */
 
 .teamevalquestion-likert-question-submission .responses.waterfall thead tr:nth-child(odd) td.remaining,
-.teamevalquestion-likert-question-submission .responses.waterfall thead tr:nth-child(odd):not(:first-child) th:not(.criteria) {
+.teamevalquestion-likert-question-submission .responses.waterfall thead tr:nth-child(odd):not(:first-child) th:not(.criteria),
+.teamevalquestion-likert-question-submission .responses.waterfall:not(.self) thead tr:first-child th:not(.criteria) {
     background-color: rgba(0,0,0,0.05);
 }
 
@@ -73,7 +74,7 @@
 }
 
 .teamevalquestion-likert-question-submission .responses.grid th:nth-child(odd) {
-    background-color: rgba(0,0,0,0.05);	
+    background-color: rgba(0,0,0,0.05);
 }
 
 .teamevalquestion-likert-question-submission .responses th.criteria {
@@ -108,7 +109,7 @@
 
 
 .teamevalquestion-likert-question-submission .responses tr:last-child td.criteria {
-    border-bottom:1px solid  #99b;	
+    border-bottom:1px solid  #99b;
 }
 
 /* color odd rows */
@@ -118,7 +119,7 @@
 }
 
 .teamevalquestion-likert-question-submission .responses tbody tr:nth-child(odd) td:nth-child(even) {
-    background-color:rgba(0,0,0,0.05);	
+    background-color:rgba(0,0,0,0.05);
 }
 
 .teamevalquestion-likert-question-submission .responses tbody tr:nth-child(odd) td.criteria {

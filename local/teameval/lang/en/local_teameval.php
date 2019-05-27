@@ -1,5 +1,5 @@
 <?php
-    
+
     $string['pluginname'] = 'Team evaluation';
     $string['teameval'] = 'Team evaluation plugin';
 
@@ -61,6 +61,12 @@
     $string['releaseallmarks'] = 'Release All Marks';
     $string['score'] = 'Score';
 
+    $string['releaseallmarkstext'] = 'Releasing marks will also release text in the <I>Comment</I> question type unless rejected.';
+    $string['releaseallmarksinfo'] = 'Release';
+    $string['releaseallmarksinfo_help'] = <<<HTML
+If you have included the <I>Comment</I> question type, student responses should be reviewed prior to releasing marks. Comments are treated as feedback and will be pushed to the Gradebook once released. To review and reject or release comments on a group or student basis, click on <I>Results</I>, and then from the <I>Report type</I> dropdown list, choose <I>Feedback</I>.
+HTML;
+
     $string['yourself'] = 'Yourself';
     $string['self'] = 'Self';
     $string['themself'] = 'Themself';
@@ -70,7 +76,7 @@
 
     $string['youradjustedscore'] = 'Your adjusted score';
     $string['yourteammatesfeedback'] = 'Your teammates\' feedback';
-    
+
     $string['incompleteadvice'] = 'This question is incomplete.';
     $string['incompletewarning'] = 'There are {$a} incomplete questions.';
     $string['incompletewarning1'] = 'There is 1 incomplete question.';
@@ -94,3 +100,5 @@
 
     $string['contextnotchild'] = '{$a->child} is not a child of {$a->parent}.';
     $string['questionidsoutofsync'] = 'Tried to set order of questions, but not all questions were included. Try reloading the page.';
+    $string['tooearly'] = 'The task tried to run before the deadline.';
+    $string['notinowngroup'] = 'User with ID {$a} is not in the group Team Evaluation thinks they\'re in. Check your group memberships and permission settings.';

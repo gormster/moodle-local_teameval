@@ -53,11 +53,11 @@ class responses_report implements \renderable, \templatable {
 
                     $marks = [];
                     foreach($groupinfo->members as $n) {
-                        
+
                         $readable = $m->response->opinion_of_readable($n->user->id, 'teamevalreport_responses');
                         $mark = new stdClass;
                         $renderer = $renderers[$m->response->question->plugin_name()];
-                        
+
                         $mark->prerendered = $renderer->render($readable);
                         if ($readable->amd_init_call()) {
                             list($module, $call) = $readable->amd_init_call();
@@ -70,7 +70,7 @@ class responses_report implements \renderable, \templatable {
                         }
 
                         $marks[] = $mark;
-                        
+
                     }
 
                     $marker = new stdClass;
@@ -78,7 +78,7 @@ class responses_report implements \renderable, \templatable {
                     $marker->scores = $marks;
 
                     $g->marks[] = $marker;
-                    
+
 
                 }
 

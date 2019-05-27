@@ -15,7 +15,7 @@ class response implements \local_teameval\response {
     protected $responses;
     protected $teammates;
 
-    public function __construct(team_evaluation $teameval, $question, $userid, $responseid = null) {
+    public function __construct(team_evaluation $teameval, $question, $userid, $responses = null) {
         global $DB;
 
         $this->teameval = $teameval;
@@ -23,18 +23,22 @@ class response implements \local_teameval\response {
         $this->userid = $userid;
         $this->teammates = $teameval->teammates($userid);
 
-        $records = $DB->get_records("teamevalquestion_likert_resp", array("questionid" => $question->id, "fromuser" => $userid), '', 'id,touser,mark,markdate');
+        if (is_null($responses)) {
+            $records = $DB->get_records("teamevalquestion_likert_resp", array("questionid" => $question->id, "fromuser" => $userid), '', 'id,touser,mark,markdate');
 
-        //rearrange responses to be keyed by touser
-        $this->responses = [];
-        foreach($records as $r) {
-            $this->responses[$r->touser] = $r;
+            //rearrange responses to be keyed by touser
+            $this->responses = [];
+            foreach($records as $r) {
+                $this->responses[$r->touser] = $r;
+            }
+        } else {
+            $this->responses = $responses;
         }
 
         $this->fix_responses();
 
     }
-    
+
     /**
      * Update responses from given user data
      * @param array $formdata userid => mark
@@ -77,7 +81,7 @@ class response implements \local_teameval\response {
     }
 
     public function opinion_of($userid) {
-        
+
         $minval = $this->question->minimum_value();
         $maxval = $this->question->maximum_value();
 
