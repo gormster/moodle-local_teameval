@@ -71,14 +71,15 @@ class external extends external_api {
         global $PAGE;
 
         // Call the function imported from the update_from_form trait
-        $id = static::update_question_internal($teamevalid, $formdata);
+        $record = static::update_question_internal($teamevalid, $formdata);
 
         $teameval = new team_evaluation($teamevalid);
 
-        $question = new question($teameval, $id);
+        $question = new question($teameval, $record['id']);
 
         $output = $PAGE->get_renderer('teamevalquestion_likert');
-        return ["id" => $id, "submissionContext" => json_encode($question->submission_view()->export_for_template($output))];
+        $record['submissionContext'] = json_encode($question->submission_view()->export_for_template($output));
+        return $record;
 
     }
 

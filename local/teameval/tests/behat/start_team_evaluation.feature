@@ -41,7 +41,7 @@ Feature: In a course, a teacher creates a module and starts team evaluation
             | assignsubmission_onlinetext_enabled | 1 |
             | assignsubmission_file_enabled | 0 |
             | teamsubmission | Yes |
-            | preventsubmissionnotingroup | 1 |
+            | preventsubmissionnotingroup | Yes |
             | groupmode | Visible groups |
 
         When I follow "Test teameval assignment"

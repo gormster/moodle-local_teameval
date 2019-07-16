@@ -10,26 +10,26 @@ use Behat\Testwork\Tester\Result\TestResult;
 
 use local_teameval\team_evaluation;
 
+// define('DEBUG',1);
+
 // todo: should this be a subclass of behat_data_generator?
 class behat_local_teameval extends behat_base {
 
     /**
+     * Allow debugging of behat tests by PAUSING on failure.
+     * Uncomment the DEBUG define above to use it. This should really be a built in part of Behat IMO...
      * @AfterStep
      *
      * @param AfterStepScope $scope
      */
-    public function waitToDebugInBrowserOnStepErrorHook(AfterStepScope $scope)
-    {
-        if ($scope->getTestResult()->getResultCode() == TestResult::FAILED) {
-            fwrite(STDOUT, PHP_EOL . "PAUSING ON FAIL - RETURN TO CONTINUE" . PHP_EOL);
-            fwrite(STDOUT, $scope->getTestResult()->getException() . PHP_EOL);
-            $handle = fopen ("php://stdin","r");
-            $input = fgets($handle);
-            while($input === false) {
-                $input = fgets($handle);
-                $this->getSession()->wait(1000);
+    public function waitToDebugInBrowserOnStepErrorHook(AfterStepScope $scope) {
+        if (defined('DEBUG')) {
+            if ($scope->getTestResult()->getResultCode() == TestResult::FAILED) {
+                fwrite(STDOUT, PHP_EOL . "\x07PAUSING ON FAILURE - Press any key to continue" . PHP_EOL);
+                fwrite(STDOUT, $scope->getTestResult()->getException()->getMessage() . PHP_EOL);
+                fflush(STDOUT);
+                $anything = fread(STDIN, 1);
             }
-
         }
     }
 

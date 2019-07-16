@@ -3,6 +3,7 @@
 namespace local_teameval\traits\question;
 
 use external_function_parameters;
+use external_single_structure;
 use external_value;
 
 use stdClass;
@@ -90,7 +91,9 @@ trait update_from_form {
     }
 
     public static function update_question_returns() {
-        return new external_value(PARAM_INT, 'id of question');
+        return new external_single_structure([
+            "id" => new external_value(PARAM_INT, 'id of question')
+        ]);
     }
 
     public static function update_question($teamevalid, $formdata) {
@@ -136,7 +139,7 @@ trait update_from_form {
 
         $teameval->update_question($transaction, $ordinal);
 
-        return $transaction->id;
+        return ['id' => $transaction->id];
 
     }
 

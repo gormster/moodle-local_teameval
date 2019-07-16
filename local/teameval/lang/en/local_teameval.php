@@ -39,7 +39,7 @@
     $string['autorelease'] = 'Automatically Release Marks';
     $string['autorelease_help'] = 'Release marks as soon as they are ready. Otherwise marks must be manually released to students.';
     $string['public'] = 'Public';
-    $string['public_help'] = 'Other users in this course category can use this questionnaire';
+    $string['public_help'] = 'Other users who can see this questionnaire can duplicate it in their courses';
     $string['fraction'] = 'Adjustment Fraction';
     $string['deadline'] = 'Deadline';
     $string['noncompletionpenalty'] = 'Non-completion penalty';

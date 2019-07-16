@@ -217,7 +217,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             var order = $("#local-teameval-questions li").map(function(i, el) {
                 return {type: $(el).data('questiontype'), id: $(el).data('questionid')};
             }).filter(function(i, el) {
-                return el !== undefined;
+                return ((el !== undefined) && (el.type !== undefined) && (el.id !== undefined));
             }).get();
 
             var promises = ajax.call([{

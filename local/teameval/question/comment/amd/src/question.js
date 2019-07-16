@@ -37,27 +37,26 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/notificatio
 
         var data = Formparse.serializeObject(form);
 
-        return this.saveForm(form, ordinal).then(function(result) {
-
-            return Strings.get_strings([
+        var savePromise = this.saveForm(form, ordinal);
+        var strPromise = Strings.get_strings([
                 {key: 'exampleuser', component: 'local_teameval'},
                 {key: 'yourself', component: 'local_teameval'}
-            ]).then(function(str) {
+            ]);
 
-                var demoUsers = [{ userid: 0, name: str[0] }];
-                if (this._self) {
-                    demoUsers.unshift({userid: -1, name: str[1], self: true});
-                }
+        return $.when(savePromise, strPromise).then( function(result, str) {
+            var demoUsers = [{ userid: 0, name: str[0] }];
+            if (this._self) {
+                demoUsers.unshift({userid: -1, name: str[1], self: true});
+            }
 
-                this._submissioncontext = $.extend({}, data, {
-                    users: demoUsers,
-                });
-                this._submissioncontext.description = data.description.text;
+            this._submissioncontext = $.extend({}, data, {
+                users: demoUsers,
+            });
+            this._submissioncontext.description = data.description.text;
 
-                this._editingcontext = data;
+            this._editingcontext = data;
 
-                return result;
-            }.bind(this));
+            return result;
         }.bind(this));
     };
 

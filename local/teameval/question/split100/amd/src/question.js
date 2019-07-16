@@ -368,7 +368,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
 
         var savePromise = this.saveForm(form, ordinal);
 
-        return $.when(valuePromise, savePromise);
+        return $.when(savePromise, valuePromise);
     };
 
     Split100Question.prototype.submit = function(call) {
