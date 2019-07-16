@@ -6,7 +6,7 @@ Team Evaluation takes information from the students in a group, uses that inform
 
 Team Evaluation is in public alpha; we have just three question plugins, one evaluator plugin and a handful of reports. Contributions are always welcome!
 
-Only Moodle 3.1 is currently supported. 2.9 support coming very soon.
+Moodle 3.5 and 3.7 are supported. (3.6 presumably is also? But untested.)
 
 # Adding Team Evaluation to your Moodle
 
