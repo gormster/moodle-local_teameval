@@ -47,8 +47,31 @@ define(['jquery'], function($) {
         }
     }
 
-    function serializeObject(form) {
+    function fixCheckboxes(form, array) {
+        var unchecked = $(form).find('input[type=checkbox]:not(:checked)').map(function() { return this.name; }).get();
+        var output = [];
+        for (var i = 0; i < array.length; i++) {
+            var field = array[i];
+            if (unchecked.indexOf(field.name) !== -1) {
+                continue;
+            } else {
+                output.push(field);
+            }
+        }
+        return output;
+    }
+
+    function serializeObject(form, options) {
+        options = Object.assign({
+            fixCheckboxes: false
+        }, options);
+
         var array = $(form).serializeArray();
+
+        if (options.fixCheckboxes) {
+            array = fixCheckboxes(form, array);
+        }
+
         var object = {};
         for (var i = 0; i < array.length; i++) {
             var field = array[i];

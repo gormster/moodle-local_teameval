@@ -49,7 +49,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/notificatio
                 demoUsers.unshift({userid: -1, name: str[1], self: true});
             }
 
-            this._submissioncontext = $.extend({}, data, {
+            this._submissioncontext = $.extend({}, Formparse.serializeObject(form, { fixCheckboxes: true }), {
                 users: demoUsers,
             });
             this._submissioncontext.description = data.description.text;
