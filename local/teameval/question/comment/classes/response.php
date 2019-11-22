@@ -35,7 +35,10 @@ class response implements \local_teameval\response_feedback {
     }
 
     public function marks_given() {
-        return (count($this->comments) > 0);
+        // The case where this is greater-than should never happen because fix_responses should make sure
+        // that it's strictly less than or equal, but we'll cover it for safety's sake, because it still counts
+        $teammates = $this->teameval->teammates($this->userid);
+        return (count($this->comments) >= count($teammates));
     }
 
     /**
@@ -101,7 +104,10 @@ class response implements \local_teameval\response_feedback {
         if ($this->marks_given()) {
             $teammates = $this->teameval->teammates($this->userid);
             foreach($this->comments as $k => $v) {
-                if (!isset($teammates[$k])) {
+                // the is_string isn't really strictly necessary, but to avoid situations
+                // where trim($v) might acidentally coerce something empty-ish to a non-empty
+                // string, we'll add the check first
+                if (!isset($teammates[$k]) || !is_string($v->comment) || empty(trim($v->comment))) {
                     unset($this->comments[$k]);
                 }
             }

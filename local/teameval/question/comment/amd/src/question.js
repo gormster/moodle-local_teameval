@@ -97,14 +97,14 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/notificatio
         });
 
         var incomplete = false;
-        if (this._submissioncontext.optional) {
-            incomplete = checkComplete();
+        if (!this._submissioncontext.optional) {
+            incomplete = this.checkComplete();
         }
 
         return !incomplete;
     };
 
-    function checkComplete() {
+    CommentQuestion.prototype.checkComplete = function() {
         var incomplete = this.container.find('textarea').filter(function() {
             return $(this).val().trim().length === 0;
         });
