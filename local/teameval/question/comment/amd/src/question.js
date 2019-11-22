@@ -116,7 +116,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/notificatio
         }
 
         return incomplete.length > 0;
-    }
+    };
 
     return CommentQuestion;
 
